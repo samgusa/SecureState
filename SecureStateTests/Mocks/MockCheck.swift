@@ -1,8 +1,8 @@
 //
-//  SecureStateTests.swift
+//  MockCheck.swift
 //  SecureStateTests
 //
-//  Created by Sam Greenhill on 5/27/25.
+//  Created by Sam Greenhill on 5/28/25.
 //
 
 import Testing
