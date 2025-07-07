@@ -10,8 +10,8 @@ import SwiftUI
 
 @MainActor
 class SecurityViewModel: ObservableObject {
-    @Published var deviceScore: Double = 45 // Out of 45
-    @Published var situationalScore: Double = 35 // Out of 35
+    @Published var deviceScore: Double = 15 // Out of 45
+    @Published var situationalScore: Double = 15 // Out of 35
     @Published var animateScore: Bool = false
     @Published var selectedSection: SecuritySection? = nil
     @Published var showingDetails: Bool = false
@@ -19,6 +19,8 @@ class SecurityViewModel: ObservableObject {
     @Published var isRefreshing: Bool = false
     @Published var scrollOffset: CGFloat = 0
     @Published var lastRefreshTime = Date()
+    // Screen Recording
+    @Published var isScreenBeingRecorded: Bool = false
 
     let maxDeviceScore: Double = 55
     let maxSituationalScore: Double = 45
@@ -44,29 +46,23 @@ class SecurityViewModel: ObservableObject {
     }
 
     var overallScoreColor: Color {
-        scoreColors(for: overallPercentage).first ?? .gray
+        SecurityConfigEnum.Level.from(percentage: situationalPercentage).data.3
+    }
+
+    var securityLevel: SecurityConfigEnum.Level {
+        SecurityConfigEnum.Level.from(percentage: overallPercentage)
     }
 
     // Security status message based on overall score
     var securityStatus: (message: String, color: Color, icon: String) {
-        switch overallPercentage {
-        case 0.85...1.0:
-            return ("Excellent Security", .green, "shield.checkered")
-        case 0.70..<0.85:
-            return ("Good Protection", .mint, "shield")
-        case 0.55..<0.70:
-            return ("Moderate Risk", .orange, "shield.slash")
-        case 0.40..<0.55:
-            return ("High Risk", .red, "exclamationmark.shield")
-        default:
-            return ("Critical Risk", .red, "xmark.shield")
-        }
+        let info = securityLevel.data
+        return (info.0, info.1, info.2)
     }
 
     // MARK: - Computed Properties
 
     var situationalGradient: LinearGradient {
-        let colors = scoreColors(for: situationalPercentage)
+        let colors = SecurityConfigEnum.Level.from(percentage: situationalPercentage).data.4
         return LinearGradient(
             colors: colors,
             startPoint: .topLeading,
@@ -75,7 +71,7 @@ class SecurityViewModel: ObservableObject {
     }
 
     var deviceGradient: LinearGradient {
-        let colors = scoreColors(for: devicePercentage)
+        let colors = SecurityConfigEnum.Level.from(percentage: devicePercentage).data.4
         return LinearGradient(
             colors: colors,
             startPoint: .center,
@@ -122,6 +118,10 @@ class SecurityViewModel: ObservableObject {
 
         lastRefreshTime = Date()
         isRefreshing = false
+    }
+
+    func detectScreenRecordingScore() -> Int {
+        return isScreenBeingRecorded ? 0 : 5
     }
 }
 

@@ -94,14 +94,14 @@ struct ScoreCardView: View {
         securityStatusColor: .mint,
         totalScore: 69,
         totalMaxScore: 80,
-        securityAdvice: "Focus on device security - enable VPN and update iOS"
+        securityAdvice: ""
     )
     .padding(.bottom, 15)
     ScoreCardView(
         animateScore: .constant(true),
         overallPercentage: 0.5,
         overallScoreColor: .red,
-        securityStatusMessage: "Good Protection",
+        securityStatusMessage: "Not Protected",
         securityStatusColor: .red,
         totalScore: 49,
         totalMaxScore: 80,

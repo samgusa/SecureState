@@ -46,7 +46,11 @@ struct HeaderView: View {
                         .font(.title2)
                         .foregroundStyle(.blue)
                         .rotationEffect(.degrees(isRefreshing ? 360 : 0))
-                        .animation(.linear(duration: 1).repeatCount(isRefreshing ? 10 : 1, autoreverses: false), value: isRefreshing)
+                        .animation(
+                            .linear(duration: 1)
+                            .repeatCount(isRefreshing ? 10 : 1, autoreverses: false),
+                            value: isRefreshing
+                        )
                 }
                 .disabled(isRefreshing)
             }

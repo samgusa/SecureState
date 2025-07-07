@@ -30,7 +30,7 @@ struct ComponentDetailsView: View {
 
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
                 ForEach(mockComponents(for: securitySection), id: \.name) { component in
-                    ComponentCard(component: component)
+//                    ComponentCard(component: component)
                 }
             }
         }
