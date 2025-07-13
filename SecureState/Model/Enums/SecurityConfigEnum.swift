@@ -18,7 +18,7 @@ enum SecurityConfigEnum {
         case moderate = 0.55
         case high = 0.40
 
-        var data: (String, Color, String, Color, [Color]) {
+        var data: (String, Color, String, Color, colorArr: [Color]) {
             switch self {
             case .excellent:
                 return ("Excellent Security", .green, "shield.checkered", .green, [.green, .mint])

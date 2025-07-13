@@ -16,6 +16,11 @@ enum SecuritySection: String, CaseIterable {
 enum ComponentStatus {
     case good, warning, caution
 
+    init(score: Int, maxScore: Int) {
+        let percentage = Double(score) / Double(maxScore)
+        self = percentage >= 0.8 ? .good : percentage >= 0.5 ? .warning : .caution
+    }
+
     var color: Color {
         switch self {
         case .good: return .green

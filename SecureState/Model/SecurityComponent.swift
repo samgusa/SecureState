@@ -13,9 +13,10 @@ struct SecurityComponent {
     let score: Int
     let maxScore: Int
     let icon: String
-    let status: ComponentStatus
 
     var percentage: Double {
         Double(score) / Double(maxScore)
     }
+
+    var status: ComponentStatus { ComponentStatus(score: score, maxScore: maxScore) }
 }

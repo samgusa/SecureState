@@ -9,7 +9,7 @@ import SwiftUI
 
 struct Home: View {
 
-    @ObservedObject var secureState = SecurityViewModel()
+    @StateObject private var secureState = SecurityViewModel()
 
     var body: some View {
         NavigationView {
@@ -62,11 +62,14 @@ struct Home: View {
                                 deviceScore: $secureState.deviceScore,
                                 situationalScore: $secureState.situationalScore,
                                 selectedTab: $secureState.selectedTab,
+                                selectedComponentForConfirmation: $secureState.selectedComponentForConfirmation,
+                                needsAttentionComponents: $secureState.needsAttentionComponents,
                                 maxDeviceScore: secureState.maxDeviceScore,
                                 devicePercentage: secureState.devicePercentage,
                                 maxSituationalScore: secureState.maxSituationalScore,
                                 situationalPercentage: secureState.situationalPercentage,
-                                scoreColors: [secureState.scoreColors(for: secureState.devicePercentage).first ?? .gray, secureState.scoreColors(for: secureState.situationalPercentage).first ?? .gray]
+                                scoreColors: [secureState.scoreColors(for: secureState.devicePercentage).first ?? .gray, secureState.scoreColors(for: secureState.situationalPercentage).first ?? .gray],
+                                networkType: secureState.networkType
                             )
                             .id("content")
                             .padding(.bottom, 100)
@@ -105,6 +108,13 @@ struct Home: View {
                 withAnimation(.easeInOut(duration: 1.5)) {
                     secureState.animateScore = true
                 }
+                if !secureState.realComponentsLoaded {
+                    Task {
+                        await secureState.loadRealDeviceComponents()
+                    }
+                }
+                // Initial check for components needing attention
+                secureState.updateNeedsAttentionComponents()
             }
             .refreshable {
                 await secureState.performSecurityRefresh()

@@ -16,7 +16,7 @@ struct OverviewView: View {
     let maxSituationalScore: Double
     var situationalPercentage: Double
     var scoreColors: [Color]
-    @State var selectedSection: SecuritySection? = nil
+    @Binding var selectedSection: SecuritySection?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -25,27 +25,26 @@ struct OverviewView: View {
                 .fontWeight(.semibold)
 
             HStack(spacing: 16) {
-                SecurityMiniCard(
+                UniversalCard(
+                    icon: "",
                     title: "Device",
-                    score: Int(deviceScore),
-                    maxScore: Int(maxDeviceScore),
-                    color: scoreColors[0],
-                    action: {
+                    subtitle: "",
+                    style: .score(Int(deviceScore), Int(maxDeviceScore), scoreColors[0], {
                         withAnimation(.spring()) {
                             selectedSection = .device
                         }
-                    }
+                    })
                 )
-                SecurityMiniCard(
+
+                UniversalCard(
+                    icon: "",
                     title: "Situational",
-                    score: Int(situationalScore),
-                    maxScore: Int(maxSituationalScore),
-                    color: scoreColors[1],
-                    action: {
+                    subtitle: "",
+                    style: .score(Int(situationalScore), Int(maxSituationalScore), scoreColors[1], {
                         withAnimation(.spring()) {
                             selectedSection = .situational
                         }
-                    }
+                    })
                 )
             }
         }
@@ -60,6 +59,7 @@ struct OverviewView: View {
         situationalScore: .constant(28),
         maxSituationalScore: 45,
         situationalPercentage: 0.8,
-        scoreColors: [.red, .green]
+        scoreColors: [.red, .green],
+        selectedSection: .constant(.device)
     )
 }

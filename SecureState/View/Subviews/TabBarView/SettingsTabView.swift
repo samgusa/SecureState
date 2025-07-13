@@ -14,18 +14,18 @@ struct SettingsTabView: View {
                 .font(.headline)
                 .fontWeight(.semibold)
             VStack(spacing: 8) {
-                SettingsToggleCard(
+                UniversalCard(
                     icon: "key.fill",
                     title: "Password Manager",
                     subtitle: "Using a password manager",
-                    isOn: true
+                    style: .toggle(.constant(true))
                 )
 
-                SettingsToggleCard(
+                UniversalCard(
                     icon: "lock.fill",
                     title: "Device Lock",
                     subtitle: "Password or biometric lock enabled",
-                    isOn: true
+                    style: .toggle(.constant(true))
                 )
             }
         }

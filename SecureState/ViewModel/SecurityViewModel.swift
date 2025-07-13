@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 class SecurityViewModel: ObservableObject {
@@ -19,8 +20,22 @@ class SecurityViewModel: ObservableObject {
     @Published var isRefreshing: Bool = false
     @Published var scrollOffset: CGFloat = 0
     @Published var lastRefreshTime = Date()
+    @Published var needsAttentionComponents: Set<String> = []
+    // Change when Create network Type
+    @Published var networkType: String = "" // REMEMBER TO CHANGE LATER
     // Screen Recording
     @Published var isScreenBeingRecorded: Bool = false
+    @Published var selectedComponentForConfirmation: SecurityComponent? = nil
+    @Published var realDeviceComponents: [SecurityComponent] = []
+    @Published var realComponentsLoaded: Bool = false
+
+    // Detectors
+    let screenRecordingDetector = ScreenRecordingDetector()
+    let iosVersionDetector = iOSVersionDetector()
+    let vpnDetector = VPNStatusDetector()
+    let networkTypeDetector = NetworkTypeDetector()
+
+    private var cancellables = Set<AnyCancellable>()
 
     let maxDeviceScore: Double = 55
     let maxSituationalScore: Double = 45
@@ -59,6 +74,38 @@ class SecurityViewModel: ObservableObject {
         return (info.0, info.1, info.2)
     }
 
+    init() {
+        setupDetectorObservations()
+    }
+
+    private func setupDetectorObservations() {
+        screenRecordingDetector.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+        iosVersionDetector.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+        vpnDetector.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+        networkTypeDetector.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+    }
+
+
     // MARK: - Computed Properties
 
     var situationalGradient: LinearGradient {
@@ -71,7 +118,7 @@ class SecurityViewModel: ObservableObject {
     }
 
     var deviceGradient: LinearGradient {
-        let colors = SecurityConfigEnum.Level.from(percentage: devicePercentage).data.4
+        let colors = SecurityConfigEnum.Level.from(percentage: devicePercentage).data.colorArr
         return LinearGradient(
             colors: colors,
             startPoint: .center,
@@ -92,12 +139,12 @@ class SecurityViewModel: ObservableObject {
 
     // Security advice based on current scores
     func getSecurityAdvice() -> String {
-        if devicePercentage < 0.5 {
-            return "Focus on device security - enable VPN, password manager, and update iOS"
-        } else if situationalPercentage < 0.5 {
-            return "Be cautious of your current environment - avoid public Wi-Fi and risky locations"
-        } else {
-            return "Consider enabling additional security measures for maximum protection"
+        switch securityLevel {
+        case .excellent, .good: return "Consider enabling additional security measures"
+        case .moderate: return devicePercentage < situationalPercentage ?
+            "Focus on device security - enable VPN and update iOS" :
+            "Be cautious of your current environment - avoid public Wi-Fi"
+        case .high: return "Multiple security improvements needed"
         }
     }
 
@@ -122,6 +169,141 @@ class SecurityViewModel: ObservableObject {
 
     func detectScreenRecordingScore() -> Int {
         return isScreenBeingRecorded ? 0 : 5
+    }
+
+    func getRealScreenRecordingComponent() async -> SecurityComponent {
+        return SecurityComponent(
+            name: "Screen Recording Detection",
+            score: screenRecordingDetector.getSecurityScore(),
+            maxScore: 5,
+            icon: screenRecordingDetector.isScreenBeingCaptured ? "eye" : "eye.slash"
+        )
+    }
+
+    func getRealIOSVersionComponent() async -> SecurityComponent {
+        let score = iosVersionDetector.getSecurityScore()
+        let maxScore: Int = 10
+        let needsConfirmation = iosVersionDetector.needsUserConfirmation()
+
+        // determin icon based on version and user confirmation
+        let icon: String
+        if needsConfirmation {
+            icon = "gear.badge.questionmark"
+        } else if score >= 8 {
+            icon = "gear.badge.checkmark"
+        } else {
+            icon = "gear.badge.mark"
+        }
+
+        return SecurityComponent(
+            name: "iOS Version",
+            score: score,
+            maxScore: maxScore,
+            icon: icon
+        )
+    }
+
+    func getRealVPNComponent() async -> SecurityComponent {
+        let score = vpnDetector.getSecurityScore()
+        let maxScore = 15
+        let needsConfirmation = vpnDetector.needsUserConfirmation()
+
+        // determine icon based on VPN status and confirmation state
+        let icon: String
+        if needsConfirmation {
+            icon = "xmark.shield"
+        } else if let confirmed = vpnDetector.isUserConfirmedVPN, confirmed {
+            icon = "shield.checkered"
+        } else if vpnDetector.isVPNDetected {
+            icon = "shield"
+        } else {
+            icon = "shield.slash"
+        }
+
+        return SecurityComponent(
+            name: "VPN Connection",
+            score: score,
+            maxScore: maxScore,
+            icon: icon
+        )
+    }
+
+    func getRealNetworkComponent() async -> SecurityComponent {
+        let score = networkTypeDetector.getSecurityScore()
+        let maxScore: Int = 10
+        let needsConfirmation = networkTypeDetector.needsUserConfirmation()
+
+        // determine icon based on network type and confirmation state
+        let icon: String
+        if needsConfirmation {
+            icon = networkTypeDetector.currentNetworkType.icon + ".badge.questionmark"
+        } else if let confirmed = networkTypeDetector.isUserConfirmedSafe {
+            icon = confirmed ? networkTypeDetector.currentNetworkType.icon + ".badge.checkmark" : networkTypeDetector.currentNetworkType.icon + ".badge.xmark"
+        } else {
+            icon = networkTypeDetector.currentNetworkType.icon
+        }
+
+        return SecurityComponent(
+            name: "Network Type",
+            score: score,
+            maxScore: maxScore,
+            icon: icon
+        )
+    }
+
+    func loadRealDeviceComponents() async {
+        screenRecordingDetector.checkCurrentState()
+        vpnDetector.checkVPNStatus()
+
+        try? await Task.sleep(for: .milliseconds(100))
+
+        let screenRecordingComponent = await getRealScreenRecordingComponent()
+        let iOSVersionComponent = await getRealIOSVersionComponent()
+        let vpnComponent = await getRealVPNComponent()
+        let networkComponent = await getRealNetworkComponent()
+
+        await MainActor.run {
+            self.realDeviceComponents = [
+                vpnComponent,
+                iOSVersionComponent,
+                networkComponent,
+                screenRecordingComponent
+
+            ]
+        }
+
+        // Update device score to include the actual score
+        let totalDeviceScore = realDeviceComponents.reduce(0, { $0 + $1.score } )
+        self.deviceScore = Double(totalDeviceScore)
+
+        self.realComponentsLoaded = true
+
+        updateNeedsAttentionComponents()
+    }
+
+    func updateNeedsAttentionComponents() {
+        var attentionSet: Set<String> = []
+
+        // Check iOS version component
+        if iosVersionDetector.needsUserConfirmation() {
+            attentionSet.insert("iOS Version")
+        }
+
+        if screenRecordingDetector.isScreenBeingCaptured {
+            attentionSet.insert("Screen Recording")
+        }
+
+        // Check VPN Status
+        if vpnDetector.needsUserConfirmation() {
+            attentionSet.insert("VPN Status")
+        }
+
+        // Check network Type
+        if networkTypeDetector.needsUserConfirmation() {
+            attentionSet.insert("Network Type")
+        }
+
+        needsAttentionComponents = attentionSet
     }
 }
 

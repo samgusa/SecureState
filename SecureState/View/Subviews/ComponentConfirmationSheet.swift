@@ -122,8 +122,7 @@ struct ComponentConfirmationSheet: View {
         name: "Test",
         score: 15,
         maxScore: 20,
-        icon: "shield",
-        status: .good
+        icon: "shield"
     ),
      onConfirm: { _ in
 

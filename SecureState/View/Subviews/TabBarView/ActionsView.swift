@@ -18,26 +18,18 @@ struct ActionsView: View {
                 .fontWeight(.semibold)
 
             VStack(spacing: 8) {
-                QuickActionCard(
+                UniversalCard(
                     icon: "shield",
                     title: "Enable VPN",
                     subtitle: "Protect your connection",
-                    color: .blue,
-                    isRecommended: devicePercentage < 0.7
+                    style: .action(.blue, devicePercentage < 0.7)
                 )
-                QuickActionCard(
+
+                UniversalCard(
                     icon: "wifi.slash",
                     title: "Avoid Public Wi-Fi",
                     subtitle: "Switch to cellular data",
-                    color: .orange,
-                    isRecommended: situationalPercentage < 0.6
-                )
-                QuickActionCard(
-                    icon: "gearshape",
-                    title: "Update iOS",
-                    subtitle: "Latest security patches",
-                    color: .green,
-                    isRecommended: false
+                    style: .action(.orange, situationalPercentage < 0.6)
                 )
             }
         }
