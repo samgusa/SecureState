@@ -11,8 +11,8 @@ import Combine
 
 @MainActor
 class SecurityViewModel: ObservableObject {
-    @Published var deviceScore: Double = 15 // Out of 45
-    @Published var situationalScore: Double = 15 // Out of 35
+    @Published var deviceScore: Double = 15 // Out of 55
+    @Published var situationalScore: Double = 15 // Out of 45
     @Published var animateScore: Bool = false
     @Published var selectedSection: SecuritySection? = nil
     @Published var showingDetails: Bool = false
@@ -28,6 +28,8 @@ class SecurityViewModel: ObservableObject {
     @Published var selectedComponentForConfirmation: SecurityComponent? = nil
     @Published var realDeviceComponents: [SecurityComponent] = []
     @Published var realComponentsLoaded: Bool = false
+
+    @Published var refreshCooldown: TimeInterval = 5.0 // 5 Seconds
 
     // Detectors
     let screenRecordingDetector = ScreenRecordingDetector()
@@ -104,7 +106,6 @@ class SecurityViewModel: ObservableObject {
             .store(in: &cancellables)
 
     }
-
 
     // MARK: - Computed Properties
 

@@ -13,15 +13,36 @@ struct FloatingScoreIndicator: View {
     let isSelected: Bool
 
     var body: some View {
-        Text("\(score)")
-            .font(.caption)
-            .fontWeight(.bold)
-            .foregroundStyle(.white)
-            .frame(width: 24, height: 24)
-            .background(Circle().fill(.blue))
-            .scaleEffect(isSelected ? 1.2 : 1.0)
-            .opacity(0.8)
-            .animation(.spring(response: 0.3), value: isSelected)
+        VStack(spacing: 4) {
+            Text("\(score)")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(scoreColor)
+                .monospacedDigit()
+
+            Text("/\(maxScore)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSelected ? scoreColor : Color.clear, lineWidth: 2)
+        }
+        .scaleEffect(isSelected ? 1.05 : 1.0)
+        .animation(.spring(response: 0.3), value: isSelected)
+    }
+
+    private var scoreColor: Color {
+        let percentage = Double(score) / Double(maxScore)
+        if percentage >= 0.8 { return .green }
+        if percentage >= 0.5 { return .orange }
+        return .red
     }
 }
 
