@@ -59,6 +59,7 @@ struct UniversalCard: View {
         switch style {
         case .score(let score, let maxScore, _, _):
             Text("\(score)/\(maxScore)")
+                .contentTransition(.numericText())
                 .font(.caption)
                 .foregroundColor(.secondary)
         case .action(_, let isRecommended):

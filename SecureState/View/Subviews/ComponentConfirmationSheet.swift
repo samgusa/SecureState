@@ -117,6 +117,15 @@ struct ComponentConfirmationSheet: View {
     }
 }
 
+//struct UnifiedComponentConfirmationSheet: View {
+//    let component: SecurityComponent
+//    let config: ComponentConfiguration
+//    let onConfirm: (Bool) -> Void
+//    let onDismiss: () -> Void
+//
+//    // Location- specific properties
+//}
+
 #Preview {
     ComponentConfirmationSheet(component: SecurityComponent(
         name: "Test",

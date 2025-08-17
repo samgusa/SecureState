@@ -72,10 +72,12 @@ class ScreenRecordingDetector: ObservableObject {
         }
     }
 
+    // Method to get the security score contribution
     func getSecurityScore() -> Int {
         return isScreenBeingCaptured ? 0 : 5
     }
 
+    // Method to get component state for security system
     func getComponentState() -> ComponentState {
         let score = getSecurityScore()
         return .autoDetected(score: score, confidence: .high)

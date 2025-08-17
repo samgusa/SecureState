@@ -36,6 +36,7 @@ class VPNStatusDetector: ObservableObject {
         }
         monitor.start(queue: queue)
 
+        // Initial check
         checkVPNStatus()
     }
 
@@ -132,6 +133,4 @@ class VPNStatusDetector: ObservableObject {
             return "No VPN Interface Found"
         }
     }
-
-
 }

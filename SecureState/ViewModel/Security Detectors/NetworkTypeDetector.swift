@@ -56,39 +56,107 @@ class NetworkTypeDetector: ObservableObject {
     }
 
     init() {
-
+        startMonitoring()
     }
 
     deinit {
-
+        stopMonitoring()
     }
 
     private func startMonitoring() {
+        monitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                self?.analyzeNetworkPath(path)
+            }
+        }
+        monitor.start(queue: queue)
 
+        checkNetworkType()
     }
 
     private func stopMonitoring() {
-
+        monitor.cancel()
     }
 
     private func analyzeNetworkPath(_ path: Network.NWPath) {
+        lastChecked = Date()
 
+        // determine network type from available interfaces
+        let newNetworkType = determineNetworkType(from: path)
+
+        if newNetworkType != currentNetworkType {
+            currentNetworkType = newNetworkType
+
+            // reset user confirmation when network type changes
+            if newNetworkType.requiresUserConfirmation {
+                isUserConfirmedSafe = nil
+            }
+        }
+
+        // set confidence based on detection reliability
+        detectionConfidence = newNetworkType == .unknown ? .low : .high
     }
 
     private func determineNetworkType(from path: Network.NWPath) -> NetworkType {
-        return .wifi
+        // check interface types in order of preference
+        let interfaces = path.availableInterfaces
+
+        for interface in interfaces {
+            switch interface.type {
+            case .wifi:
+                return .wifi
+            case .cellular:
+                return .cellular
+            case .wiredEthernet:
+                return .ethernet
+            case .other, .loopback:
+                // MARK: Figure out what this continue means in a switch and the other stuff below.
+                continue
+            @unknown default:
+                continue
+            }
+        }
+        return .unknown
     }
 
     func checkNetworkType() {
-
+        DispatchQueue.main.async { [weak self] in
+            if let currentPath = self?.monitor.currentPath {
+                self?.analyzeNetworkPath(currentPath)
+            }
+        }
     }
 
     func getSecurityScore() -> Int {
-        return 1
+        let baseScore = currentNetworkType.baseSecurityScore
+
+        // Apply user confirmation if network type requires it
+        if currentNetworkType.requiresUserConfirmation {
+            if let userConfirmed = isUserConfirmedSafe {
+                return userConfirmed ? maxScore : 2 // Very low score for confirmed unsafe networks
+            } else {
+                return baseScore
+            }
+        }
+        return baseScore
     }
 
     func getComponentState() -> ComponentState {
-        return .userOnly(score: 1)
+        let autoScore = currentNetworkType.baseSecurityScore
+
+        if currentNetworkType.requiresUserConfirmation {
+            if let userConfirmed = isUserConfirmedSafe {
+                let finalScore = userConfirmed ? maxScore : 2
+                return .userConfirmed(autoScore: autoScore, userScore: finalScore)
+            } else {
+                return .needsUserInput(
+                    autoScore: autoScore,
+                    reason: "Please confirm if this \(currentNetworkType.rawValue) network is trusted"
+                )
+            }
+        } else {
+            return .autoDetected(score: autoScore, confidence: detectionConfidence)
+        }
     }
 
     func confirmNetworkSafe() {
@@ -104,15 +172,38 @@ class NetworkTypeDetector: ObservableObject {
     }
 
     func needsUserConfirmation() -> Bool {
-        return true
+        return currentNetworkType.requiresUserConfirmation && isUserConfirmedSafe == nil
     }
 
     var statusDisplayString: String {
-        return ""
+        let baseStatus = "Connected via \(currentNetworkType.rawValue)"
+
+        if let userConfirmed = isUserConfirmedSafe {
+            let safteyStatus = userConfirmed ? "(Trusted)" : "(Untrusted)"
+            return "\(baseStatus) \(safteyStatus)"
+        }
+
+        if currentNetworkType.requiresUserConfirmation {
+            return "\(baseStatus) (Needs Confirmation)"
+        }
+        return baseStatus
     }
 
     var scoreExplanation: String {
-        return ""
+        let currentScore = getSecurityScore()
+        let baseScore = currentNetworkType.baseSecurityScore
+
+        if let userConfirmed = isUserConfirmedSafe {
+            if userConfirmed {
+                return "Trusted \(currentNetworkType.rawValue) network (\(maxScore)/\(maxScore))"
+            } else {
+                return "Untrusted network - high risk (2/\(maxScore))"
+            }
+        }
+        if currentNetworkType.requiresUserConfirmation {
+            return "Auto-detected: \(baseScore)/\(maxScore)) - confirmed network safety for full assessment"
+        }
+        return "\(currentNetworkType.rawValue): \(currentScore)/\(maxScore)"
     }
 
     

@@ -36,9 +36,12 @@ struct ScoreCardView: View {
 
                     VStack(spacing: 2) {
                         Text("\(Int(overallPercentage * 100))")
+                            .contentTransition(.numericText())
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundStyle(overallScoreColor)
+                            .monospacedDigit()
+
                         Text("%")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -50,6 +53,7 @@ struct ScoreCardView: View {
                         .font(.headline)
                         .fontWeight(.semibold)
                         .foregroundStyle(securityStatusColor)
+
                     Text("Current protection level")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -65,6 +69,7 @@ struct ScoreCardView: View {
                 HStack {
                     Image(systemName: "lightbulb")
                         .foregroundStyle(.orange)
+
                     Text(securityAdvice)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -93,7 +98,7 @@ struct ScoreCardView: View {
         securityStatusMessage: "Good Protection",
         securityStatusColor: .mint,
         totalScore: 69,
-        totalMaxScore: 80,
+        totalMaxScore: 100,
         securityAdvice: ""
     )
     .padding(.bottom, 15)
@@ -104,7 +109,7 @@ struct ScoreCardView: View {
         securityStatusMessage: "Not Protected",
         securityStatusColor: .red,
         totalScore: 49,
-        totalMaxScore: 80,
+        totalMaxScore: 100,
         securityAdvice: "Focus on device security - enable VPN and update iOS"
     )
 }

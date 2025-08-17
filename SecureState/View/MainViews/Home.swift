@@ -121,6 +121,17 @@ struct Home: View {
             }
         }
     }
+
+    var fixedNotificationReceiver: some View {
+        EmptyView()
+            .onReceive(NotificationCenter.default.publisher(for: .locationContextSelected), perform: { notification in
+                print("Received location context selection notification")
+
+                // Update nearby device detector with new location context
+                
+
+            })
+    }
 }
 
 #Preview {
