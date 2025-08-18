@@ -204,10 +204,6 @@ class NearbyDeviceExposureDetector: NSObject, ObservableObject, CBCentralManager
         case .publicWithAccessory: return "Consider disabling Bluetooth when accessories aren't needed"
         case .publicNoAccessory: return "Recommendation: Turn off Bluetooth to reduce exposure risk"
         }
-        return ""
     }
-
-
-
 
 }

@@ -31,11 +31,14 @@ class SecurityViewModel: ObservableObject {
 
     @Published var refreshCooldown: TimeInterval = 5.0 // 5 Seconds
 
-    // Detectors
+    // Device Detectors
     let screenRecordingDetector = ScreenRecordingDetector()
     let iosVersionDetector = iOSVersionDetector()
     let vpnDetector = VPNStatusDetector()
     let networkTypeDetector = NetworkTypeDetector()
+
+    // Situational Detectors
+
 
     private var cancellables = Set<AnyCancellable>()
 
