@@ -24,7 +24,6 @@ struct ComponentConfirmationSheet: View {
     @State private var mapRegion = MKCoordinateRegion()
     @State private var hideLocationTimer: Timer?
 
-    /// DONE
     var body: some View {
         NavigationView {
             ScrollView {
@@ -63,7 +62,6 @@ struct ComponentConfirmationSheet: View {
     }
 
     // MARK: - Header Section
-    /// DONE
     private var headerSection: some View {
         VStack(spacing: 16) {
             ZStack {
@@ -90,7 +88,6 @@ struct ComponentConfirmationSheet: View {
     }
 
     // MARK: - Simple Confirmation Content
-    /// DONE
     private var simpleConfirmationContent: some View {
         VStack(spacing: 16) {
             Text(config.question)
@@ -122,7 +119,6 @@ struct ComponentConfirmationSheet: View {
     }
 
     // MARK: - Complex Confirmation Content
-    /// DONE
     private var complexConfirmationContent: some View {
         VStack(spacing: 20) {
             if config.name == "Location Context" {
@@ -135,12 +131,8 @@ struct ComponentConfirmationSheet: View {
     }
 
     // MARK: - Network Security Context
-    // DONE
     private var networkSecurityContextView: some View {
         VStack(spacing: 16) {
-            Text(config.question)
-                .font(.headline)
-                .fontWeight(.medium)
 
             VStack(spacing: 12) {
                 networkTypeCard("Private Networks",
@@ -161,7 +153,6 @@ struct ComponentConfirmationSheet: View {
     }
 
     // MARK: - Location Context View
-    // DONE
     private var locationContextView: some View {
         VStack(spacing: 20) {
             if let detector = locationDetector {
@@ -199,7 +190,6 @@ struct ComponentConfirmationSheet: View {
     }
 
     // MARK: - Action Buttons
-    /// DONE
     private var actionButtons: some View {
         VStack(spacing: 12) {
             // Only show standard Yes/No buttons for simple and contextual types
@@ -220,7 +210,6 @@ struct ComponentConfirmationSheet: View {
     }
 
     // MARK: - Helper Views
-    /// DONE
     private func contextCard(_ text: String) -> some View {
         Text(text)
             .font(.subheadline)
@@ -230,7 +219,6 @@ struct ComponentConfirmationSheet: View {
             .cornerRadius(8)
     }
 
-    /// DONE
     private func networkTypeCard(_ title: String, _ description: String, _ icon: String, _ color: Color) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
@@ -255,7 +243,6 @@ struct ComponentConfirmationSheet: View {
         .cornerRadius(8)
     }
 
-    /// DONE
     private func infoBox(_ text: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: "info.circle.fill")
@@ -271,7 +258,6 @@ struct ComponentConfirmationSheet: View {
     }
 
     // MARK: - Helper Methods
-    /// DONE
     private func getNetworkContext() -> String? {
         switch config.name {
         case "VPN Status":
@@ -286,7 +272,6 @@ struct ComponentConfirmationSheet: View {
         }
     }
 
-    /// DONE
     private func setupForComponentType() {
         if config.name == "Location Context", let detector = locationDetector,
            let snapshot = detector.currentLocationSnapshot {

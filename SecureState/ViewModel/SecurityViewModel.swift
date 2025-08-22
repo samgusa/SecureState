@@ -542,7 +542,7 @@ class SecurityViewModel: ObservableObject {
         }
         // update the attention components and refresh scores
         Task {
-            // await refreshComponentsAfterConfirmation()
+            await refreshComponentsAfterConfirmation()
         }
     }
 

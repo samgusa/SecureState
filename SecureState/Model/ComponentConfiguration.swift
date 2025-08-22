@@ -36,14 +36,13 @@ extension ComponentConfiguration {
     static func create(for component: SecurityComponent,
                        networkType: String? = nil,
                        networkName: String? = nil,
-                       locationDetector: EnhancedLocationContextDetector? = nil
-    ) -> ComponentConfiguration {
+                       locationDetector: EnhancedLocationContextDetector? = nil) -> ComponentConfiguration {
 
         switch component.name {
         case "iOS Version":
             return ComponentConfiguration(
                 name: "iOS Version",
-                type: .simple,
+                type: .contextual,
                 icon: component.icon,
                 title: "iOS Version Status",
                 description: "Keeping iOS updated is crucial for security.",
@@ -51,11 +50,11 @@ extension ComponentConfiguration {
                 positiveText: "Yes, I'm up to date",
                 negativeText: "No, update available"
             )
-            
+
         case "VPN Status":
             return ComponentConfiguration(
                 name: "VPN Status",
-                type: .simple,
+                type: .contextual,
                 icon: component.icon,
                 title: "VPN Status",
                 description: "A VPN encrypts your connection and protects your privacy.",
@@ -63,11 +62,11 @@ extension ComponentConfiguration {
                 positiveText: "Yes, using VPN",
                 negativeText: "No VPN active"
             )
-            
+
         case "Network Security":
             return ComponentConfiguration(
                 name: "Network Security",
-                type: .contextual,
+                type: .complex,
                 icon: component.icon,
                 title: "Network Security",
                 description: "Network security depends on who else can access your connection.",
@@ -75,7 +74,7 @@ extension ComponentConfiguration {
                 positiveText: "No, it's private/trusted",
                 negativeText: "Yes, it's shared/public"
             )
-            
+
         case "Location Context":
             return ComponentConfiguration(
                 name: "Location Context",
@@ -87,12 +86,12 @@ extension ComponentConfiguration {
                 positiveText: "",
                 negativeText: ""
             )
-            
+
             // Add other components...
         default:
             return ComponentConfiguration(
                 name: component.name,
-                type: .simple,
+                type: .contextual,
                 icon: component.icon,
                 title: component.name,
                 description: "This component helps protect your device.",

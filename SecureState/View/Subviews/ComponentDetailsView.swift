@@ -62,11 +62,6 @@ struct ComponentDetailsView: View {
                 removal: .opacity
             )
         )
-
-    }
-
-    private func handleComponentConfirmation(component: SecurityComponent, confirmed: Bool) {
-        
     }
 
     func getComponents(for section: SecuritySection) -> [SecurityComponent] {

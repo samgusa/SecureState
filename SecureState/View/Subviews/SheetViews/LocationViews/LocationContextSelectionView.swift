@@ -20,6 +20,7 @@ struct LocationContextSelectionView: View {
                 ForEach(EnhancedLocationContextDetector.LocationSecurityContext.allCases, id: \.rawValue) { context in
                     Button {
                         detector.selectContext(context)
+                        onSelection(context)
                     } label: {
                         HStack(spacing: 12) {
                             ZStack {
@@ -77,5 +78,10 @@ struct LocationContextSelectionView: View {
 }
 
 #Preview {
-    Home()
+    LocationContextSelectionView(
+        detector: EnhancedLocationContextDetector(),
+        onSelection: { component in
+            
+        }
+    )
 }
