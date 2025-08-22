@@ -12,6 +12,8 @@ struct ComponentCard: View {
     let needsAttention: Bool
     let onConfirm: (Bool) -> Void
     let networkType: String
+    let networkName: String
+    let locationDetector: EnhancedLocationContextDetector?
 
     @State private var pulseAnimation: Bool = false
     @State private var showConfirmationSheet: Bool = false
@@ -47,25 +49,14 @@ struct ComponentCard: View {
 
                     Spacer()
 
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("\(component.score)/\(component.maxScore)")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.secondary)
+                    Text("\(component.score)/\(component.maxScore)")
+                        .contentTransition(.numericText())
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
 
-                        // Detection Method Indicator
-                        if needsAttention {
-                            Text("Needs Confirmation")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.orange)
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 2)
-                                .background(Color.orange.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
-                        }
-                    }
                 }
+
                 Text(component.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -88,29 +79,11 @@ struct ComponentCard: View {
                     }
                 }
                 .frame(height: 4)
-
-                // Attention Message
-                if needsAttention {
-                    HStack(spacing: 4) {
-                        Image(systemName: "hand.tap.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.orange)
-                        Text("Tap to confirm status")
-                            .font(.caption2)
-                            .foregroundStyle(.orange)
-                            .fontWeight(.medium)
-                    }
-                    .padding(.top, 4)
-                }
             }
             .padding()
             .background(needsAttention ? Color.orange.opacity(0.05) : Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
-            .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(needsAttention ? Color.orange.opacity(0.3) : .clear, lineWidth: 1)
-            }
         }
         .buttonStyle(PlainButtonStyle())
         .onAppear {
@@ -119,8 +92,15 @@ struct ComponentCard: View {
             }
         }
         .sheet(isPresented: $showConfirmationSheet) {
+            let config = ComponentConfiguration.create(
+                for: component,
+                networkType: networkType,
+                networkName: networkName,
+                locationDetector: locationDetector
+            )
             ComponentConfirmationSheet(
                 component: component,
+                config: config,
                 onConfirm: { confirmed in
                     onConfirm(confirmed)
                     showConfirmationSheet = false
@@ -128,21 +108,53 @@ struct ComponentCard: View {
                 onDismiss: {
                     showConfirmationSheet = false
                 },
-                networkType: networkType
+                locationDetector: locationDetector,
+                networkType: networkType,
+                networkName: networkName
             )
         }
-
     }
 }
 
 #Preview {
-//    ComponentCard(
-//        component: SecurityComponent(
-//            name: "Test",
-//            score: 15,
-//            maxScore: 20,
-//            icon: "shield",
-//            status: .good
-//        )
-//    )
+    ComponentCard(
+        component: SecurityComponent(
+            name: "Wifi",
+            score: 18,
+            maxScore: 20,
+            icon: "wifi"
+        ),
+        needsAttention: false,
+        onConfirm: { _ in },
+        networkType: "Network 1",
+        networkName: "Network 2",
+        locationDetector: EnhancedLocationContextDetector()
+    )
+    ComponentCard(
+        component: SecurityComponent(
+            name: "Wifi",
+            score: 15,
+            maxScore: 20,
+            icon: "wifi"
+        ),
+        needsAttention: true,
+        onConfirm: { _ in },
+        networkType: "Network 1",
+        networkName: "Network 2",
+        locationDetector: EnhancedLocationContextDetector()
+    )
+
+    ComponentCard(
+        component: SecurityComponent(
+            name: "Wifi",
+            score: 2,
+            maxScore: 20,
+            icon: "wifi"
+        ),
+        needsAttention: true,
+        onConfirm: { _ in },
+        networkType: "Network 1",
+        networkName: "Network 2",
+        locationDetector: EnhancedLocationContextDetector()
+    )
 }

@@ -17,7 +17,8 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding()
             .background(.blue)
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .scaleEffect(configuration.isPressed ? 0.95 : 10)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+
     }
 }
 

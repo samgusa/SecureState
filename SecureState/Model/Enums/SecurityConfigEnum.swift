@@ -9,8 +9,8 @@ import SwiftUI
 import Foundation
 
 enum SecurityConfigEnum {
-    static let maxDevice: Double = 45
-    static let maxSituational: Double = 35
+    static let maxDevice: Double = 55
+    static let maxSituational: Double = 45
 
     enum Level: Double, CaseIterable {
         case excellent = 0.85

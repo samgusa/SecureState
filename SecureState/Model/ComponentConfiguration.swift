@@ -31,3 +31,75 @@ struct ComponentConfiguration {
         self.detailContent = detailContent
     }
 }
+
+extension ComponentConfiguration {
+    static func create(for component: SecurityComponent,
+                       networkType: String? = nil,
+                       networkName: String? = nil,
+                       locationDetector: EnhancedLocationContextDetector? = nil
+    ) -> ComponentConfiguration {
+
+        switch component.name {
+        case "iOS Version":
+            return ComponentConfiguration(
+                name: "iOS Version",
+                type: .simple,
+                icon: component.icon,
+                title: "iOS Version Status",
+                description: "Keeping iOS updated is crucial for security.",
+                question: "Is your iOS version up to date?",
+                positiveText: "Yes, I'm up to date",
+                negativeText: "No, update available"
+            )
+            
+        case "VPN Status":
+            return ComponentConfiguration(
+                name: "VPN Status",
+                type: .simple,
+                icon: component.icon,
+                title: "VPN Status",
+                description: "A VPN encrypts your connection and protects your privacy.",
+                question: "Are you currently using a VPN?",
+                positiveText: "Yes, using VPN",
+                negativeText: "No VPN active"
+            )
+            
+        case "Network Security":
+            return ComponentConfiguration(
+                name: "Network Security",
+                type: .contextual,
+                icon: component.icon,
+                title: "Network Security",
+                description: "Network security depends on who else can access your connection.",
+                question: "Are you sharing this network with strangers?",
+                positiveText: "No, it's private/trusted",
+                negativeText: "Yes, it's shared/public"
+            )
+            
+        case "Location Context":
+            return ComponentConfiguration(
+                name: "Location Context",
+                type: .complex,
+                icon: component.icon,
+                title: "Location Security Context",
+                description: "Your location affects your security risk profile.",
+                question: "Select your current security context",
+                positiveText: "",
+                negativeText: ""
+            )
+            
+            // Add other components...
+        default:
+            return ComponentConfiguration(
+                name: component.name,
+                type: .simple,
+                icon: component.icon,
+                title: component.name,
+                description: "This component helps protect your device.",
+                question: "Please confirm status",
+                positiveText: "Yes",
+                negativeText: "No"
+            )
+        }
+    }
+}

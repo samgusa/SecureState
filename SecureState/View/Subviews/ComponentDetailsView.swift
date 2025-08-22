@@ -12,8 +12,12 @@ struct ComponentDetailsView: View {
     @Binding var selectedComponentForConfirmation: SecurityComponent?
     @State private var showingConfirmationSheet: Bool = false
     @Binding var needsAttentionComponents: Set<String>
+    let onConfirm: (SecurityComponent, Bool) -> Void
     let networkType: String
-
+    let networkName: String
+    let enhancedLocationContextDetector: EnhancedLocationContextDetector
+    let realDeviceComponents: [SecurityComponent]
+    let realSituationalComponents: [SecurityComponent]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -21,6 +25,7 @@ struct ComponentDetailsView: View {
                 Text("\(String(describing: securitySection?.rawValue.capitalized ?? "")) Components")
                     .font(.headline)
                     .fontWeight(.semibold)
+
                 Spacer()
 
                 Button("Done") {
@@ -33,14 +38,17 @@ struct ComponentDetailsView: View {
             }
 
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                ForEach(mockComponents(for: securitySection ?? .device), id: \.name) { component in
+                let componentsToShow = getComponents(for: securitySection ?? .device)
+                ForEach(componentsToShow, id: \.name) { component in
                     ComponentCard(
                         component: component,
                         needsAttention: needsAttentionComponents.contains(component.name),
                         onConfirm: { confirmed in
-                            handleComponentConfirmation(component: component, confirmed: confirmed)
+                            onConfirm(component, confirmed)
                         },
-                        networkType: networkType
+                        networkType: networkType,
+                        networkName: networkName,
+                        locationDetector: enhancedLocationContextDetector
                     )
                 }
             }
@@ -54,47 +62,19 @@ struct ComponentDetailsView: View {
                 removal: .opacity
             )
         )
-        .sheet(isPresented: $showingConfirmationSheet) {
 
-            ComponentConfirmationSheet(
-                component: selectedComponentForConfirmation ?? SecurityComponent(
-                    name: "Password Manager",
-                    score: 10,
-                    maxScore: 10,
-                    icon: "key"
-                ),
-                onConfirm: { confirmed in
-                    showingConfirmationSheet = false
-                },
-                onDismiss: {
-                    showingConfirmationSheet = false
-                    selectedComponentForConfirmation = nil
-                },
-                networkType: networkType
-            )
-        }
     }
 
     private func handleComponentConfirmation(component: SecurityComponent, confirmed: Bool) {
         
     }
 
-    func mockComponents(for section: SecuritySection) -> [SecurityComponent] {
+    func getComponents(for section: SecuritySection) -> [SecurityComponent] {
         switch section {
         case .device:
-            return [
-                SecurityComponent(name: "VPN Status", score: 10, maxScore: 15, icon: "shield"),
-                SecurityComponent(name: "iOS Version", score: 8, maxScore: 10, icon: "gear"),
-                SecurityComponent(name: "Network Type", score: 6, maxScore: 10, icon: "wifi"),
-                SecurityComponent(name: "Screen Recording", score: 5, maxScore: 5, icon: "eye.slash")
-            ]
+            return realDeviceComponents
         case .situational:
-            return [
-                SecurityComponent(name: "Public Wi-Fi", score: 10, maxScore: 15, icon: "wifi.exclamationmark"),
-                SecurityComponent(name: "Location Context", score: 8, maxScore: 10, icon: "location"),
-                SecurityComponent(name: "Time Risk", score: 5, maxScore: 5, icon: "clock"),
-                SecurityComponent(name: "Background Activity", score: 5, maxScore: 5, icon: "app.badge")
-            ]
+            return realSituationalComponents
         }
     }
 }
@@ -111,6 +91,23 @@ struct ComponentDetailsView: View {
             )
         ),
         needsAttentionComponents: .constant([]),
-        networkType: "testing"
+        onConfirm: { a, b in
+
+        },
+        networkType: "testing",
+        networkName: "Testing1",
+        enhancedLocationContextDetector: .init(),
+        realDeviceComponents: [
+            SecurityComponent(name: "VPN Status", score: 10, maxScore: 15, icon: "shield"),
+            SecurityComponent(name: "iOS Version", score: 8, maxScore: 10, icon: "gear"),
+            SecurityComponent(name: "Network Type", score: 6, maxScore: 10, icon: "wifi"),
+            SecurityComponent(name: "Screen Recording", score: 5, maxScore: 5, icon: "eye.slash")
+        ],
+        realSituationalComponents: [
+            SecurityComponent(name: "Public Wi-Fi", score: 10, maxScore: 15, icon: "wifi.exclamationmark"),
+            SecurityComponent(name: "Location Context", score: 8, maxScore: 10, icon: "location"),
+            SecurityComponent(name: "Time Risk", score: 5, maxScore: 5, icon: "clock"),
+            SecurityComponent(name: "Background Activity", score: 5, maxScore: 5, icon: "app.badge")
+        ]
     )
 }

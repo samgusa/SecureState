@@ -19,8 +19,8 @@ struct SScoreView: View {
     @Binding var situationalScore: Double
     @Binding var deviceScore: Double
 
-    let maxDeviceScore: Double = 45
-    let maxSituationalScore: Double = 35
+    let maxDeviceScore: Double = 55
+    let maxSituationalScore: Double = 45
 
     var body: some View {
         ZStack {
@@ -46,7 +46,7 @@ struct SScoreView: View {
 
             // Device Security (Bottom curve)
             SShapePath()
-                .trim(from: 0.5, to: animateScore ? 0.5 + (0.5 * devicePercentage) : 0.5)
+                .trim(from: 0.5, to: animateScore ? (0.5 + (0.5 * devicePercentage)) : 0.5)
                 .stroke(
                     deviceGradient,
                     style: StrokeStyle(lineWidth: 20, lineCap: .round)
@@ -68,7 +68,9 @@ struct SScoreView: View {
                         FloatingScoreIndicator(
                             score: Int(situationalScore),
                             maxScore: Int(maxSituationalScore),
-                            isSelected: selectedSection == .situational
+                            isSelected: selectedSection == .situational//,
+                        //  animate: $animateScore,
+                        //  delay: 0.9
                         )
                         .offset(x: -40, y: -20)
                         .onTapGesture {
@@ -84,13 +86,15 @@ struct SScoreView: View {
                         FloatingScoreIndicator(
                             score: Int(deviceScore),
                             maxScore: Int(maxDeviceScore),
-                            isSelected: selectedSection == .device
+                            isSelected: selectedSection == .device//,
+                        //  animate: $animateScore,
+                        //  delay: 0.9
                         )
                         .offset(x: 40, y: 20)
                         .onTapGesture {
                             withAnimation(.spring()) {
                                 selectedSection = selectedSection == .device ? nil : .device
-                                selectedTab = .overview
+                                //selectedTab = .overview
                             }
                         }
                         Spacer()

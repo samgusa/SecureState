@@ -17,6 +17,9 @@ struct Home: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 24) {
+
+                            fixedNotificationReceiver
+
                             // Header Section with Auto-refresh
                             HeaderView(
                                 isRefreshing: secureState.isRefreshing,
@@ -69,7 +72,18 @@ struct Home: View {
                                 maxSituationalScore: secureState.maxSituationalScore,
                                 situationalPercentage: secureState.situationalPercentage,
                                 scoreColors: [secureState.scoreColors(for: secureState.devicePercentage).first ?? .gray, secureState.scoreColors(for: secureState.situationalPercentage).first ?? .gray],
-                                networkType: secureState.networkType
+                                onConfirm: { component, confirmed in
+                                    secureState
+                                        .handleComponentConfirmation(
+                                            component: component,
+                                            confirmed: confirmed
+                                        )
+                                },
+                                networkType: secureState.networkType,
+                                networkName: secureState.networkName,
+                                enhancedLocationContextDetector: secureState.enhancedLocationContextDetector,
+                                realDeviceComponents: secureState.realDeviceComponents,
+                                realSituationalComponents: secureState.realSituationalComponents
                             )
                             .id("content")
                             .padding(.bottom, 100)
@@ -105,19 +119,16 @@ struct Home: View {
             .navigationTitle("Secure State")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                withAnimation(.easeInOut(duration: 1.5)) {
-                    secureState.animateScore = true
-                }
-                if !secureState.realComponentsLoaded {
-                    Task {
-                        await secureState.loadRealDeviceComponents()
-                    }
-                }
-                // Initial check for components needing attention
-                secureState.updateNeedsAttentionComponents()
+                secureState.setupInitialState()
             }
             .refreshable {
                 await secureState.performSecurityRefresh()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .locationContextSelected)) { _ in
+                secureState.nearbyDeviceExposureDetector.updateLocationContext(isPublic: secureState.enhancedLocationContextDetector.isInPublicSpace)
+                Task {
+                    await secureState.performSecurityRefresh()
+                }
             }
         }
     }
@@ -128,7 +139,12 @@ struct Home: View {
                 print("Received location context selection notification")
 
                 // Update nearby device detector with new location context
-                
+                secureState.nearbyDeviceExposureDetector.updateLocationContext(isPublic: secureState.enhancedLocationContextDetector.isInPublicSpace)
+
+                // Refresh all component
+                Task {
+                    await secureState.refreshComponentsAfterConfirmation()
+                }
 
             })
     }
