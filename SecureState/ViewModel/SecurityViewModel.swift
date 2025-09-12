@@ -165,41 +165,9 @@ class SecurityViewModel: ObservableObject {
     }
 
     // MARK: Device Components
-    func getRealScreenRecordingComponent() async -> SecurityComponent {
-        return SecurityComponent(
-            name: "Screen Recording Detection",
-            score: screenRecordingDetector.getSecurityScore(),
-            maxScore: 5,
-            icon: screenRecordingDetector.isScreenBeingCaptured ? "eye" : "eye.slash"
-        )
-    }
-
-    func getRealIOSVersionComponent() async -> SecurityComponent {
-        let score = iosVersionDetector.getSecurityScore()
-        let maxScore: Int = 10
-        let needsConfirmation = iosVersionDetector.needsUserConfirmation()
-
-        // determin icon based on version and user confirmation
-        let icon: String
-        if needsConfirmation {
-            icon = "gear.badge.questionmark"
-        } else if score >= 8 {
-            icon = "gear.badge.checkmark"
-        } else {
-            icon = "gear.badge.xmark"
-        }
-
-        return SecurityComponent(
-            name: "iOS Version",
-            score: score,
-            maxScore: maxScore,
-            icon: icon
-        )
-    }
-
     func getRealVPNComponent() async -> SecurityComponent {
         let score = vpnDetector.getSecurityScore()
-        let maxScore = 15
+        let maxScore = 20
         let needsConfirmation = vpnDetector.needsUserConfirmation()
 
         // determine icon based on VPN status and confirmation state
@@ -222,9 +190,32 @@ class SecurityViewModel: ObservableObject {
         )
     }
 
+    func getRealIOSVersionComponent() async -> SecurityComponent {
+        let score = iosVersionDetector.getSecurityScore()
+        let maxScore: Int = 15
+        let needsConfirmation = iosVersionDetector.needsUserConfirmation()
+
+        // determin icon based on version and user confirmation
+        let icon: String
+        if needsConfirmation {
+            icon = "gear.badge.questionmark"
+        } else if score >= 8 {
+            icon = "gear.badge.checkmark"
+        } else {
+            icon = "gear.badge.xmark"
+        }
+
+        return SecurityComponent(
+            name: "iOS Version",
+            score: score,
+            maxScore: maxScore,
+            icon: icon
+        )
+    }
+
     func getRealNetworkComponent() async -> SecurityComponent {
         let score = networkTypeDetector.getSecurityScore()
-        let maxScore: Int = 10
+        let maxScore: Int = 15
         let needsConfirmation = networkTypeDetector.needsUserConfirmation()
 
         // determine icon based on network type and confirmation state
@@ -242,6 +233,15 @@ class SecurityViewModel: ObservableObject {
             score: score,
             maxScore: maxScore,
             icon: icon
+        )
+    }
+
+    func getRealScreenRecordingComponent() async -> SecurityComponent {
+        return SecurityComponent(
+            name: "Screen Recording Detection",
+            score: screenRecordingDetector.getSecurityScore(),
+            maxScore: 5,
+            icon: screenRecordingDetector.isScreenBeingCaptured ? "eye" : "eye.slash"
         )
     }
 

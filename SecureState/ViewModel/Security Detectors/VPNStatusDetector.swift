@@ -18,7 +18,7 @@ class VPNStatusDetector: ObservableObject {
 
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "VPNMonitor")
-    private let maxScore: Int = 15
+    private let maxScore: Int = 20
 
     init() {
         startMonitoring()

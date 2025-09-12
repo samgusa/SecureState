@@ -90,14 +90,14 @@ struct CurrentTabContent: View {
         networkName: "",
         enhancedLocationContextDetector: .init(),
         realDeviceComponents: [
-            SecurityComponent(name: "VPN Status", score: 10, maxScore: 15, icon: "shield"),
-            SecurityComponent(name: "iOS Version", score: 8, maxScore: 10, icon: "gear"),
-            SecurityComponent(name: "Network Type", score: 6, maxScore: 10, icon: "wifi"),
+            SecurityComponent(name: "VPN Status", score: 10, maxScore: 20, icon: "shield"),
+            SecurityComponent(name: "iOS Version", score: 8, maxScore: 15, icon: "gear"),
+            SecurityComponent(name: "Network Type", score: 6, maxScore: 15, icon: "wifi"),
             SecurityComponent(name: "Screen Recording", score: 5, maxScore: 5, icon: "eye.slash")
         ],
         realSituationalComponents: [
-            SecurityComponent(name: "Public Wi-Fi", score: 10, maxScore: 15, icon: "wifi.exclamationmark"),
-            SecurityComponent(name: "Location Context", score: 8, maxScore: 10, icon: "location"),
+            SecurityComponent(name: "Public Wi-Fi", score: 10, maxScore: 20, icon: "wifi.exclamationmark"),
+            SecurityComponent(name: "Location Context", score: 8, maxScore: 15, icon: "location"),
             SecurityComponent(name: "Time Risk", score: 5, maxScore: 5, icon: "clock"),
             SecurityComponent(name: "Background Activity", score: 5, maxScore: 5, icon: "app.badge")
         ]

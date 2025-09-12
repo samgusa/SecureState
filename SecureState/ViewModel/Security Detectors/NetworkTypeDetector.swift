@@ -19,7 +19,7 @@ class NetworkTypeDetector: ObservableObject {
 
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "NetworkTypeMonitor")
-    private let maxScore: Int = 10
+    private let maxScore: Int = 15
 
     enum NetworkType: String, CaseIterable {
         case wifi = "Wi-Fi"

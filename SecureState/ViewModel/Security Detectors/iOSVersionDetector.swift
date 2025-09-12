@@ -14,7 +14,7 @@ class iOSVersionDetector: ObservableObject {
     @Published var versionComponents: (major: Int, minor: Int, patch: Int) = (0, 0, 0)
     @Published var isUserConfirmedLatest: Bool? = nil
 
-    private let maxScore: Int = 10
+    private let maxScore: Int = 15
 
     init() {
         detectCurrentVersion()
