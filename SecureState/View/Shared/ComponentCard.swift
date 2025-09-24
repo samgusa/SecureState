@@ -11,9 +11,10 @@ struct ComponentCard: View {
     let component: SecurityComponent
     let needsAttention: Bool
     let onConfirm: (Bool) -> Void
-    let networkType: String
     let networkName: String
     let locationDetector: EnhancedLocationContextDetector?
+    let deviceLockDetector: DeviceLockSecurityDetector?
+    let bluetoothDetector: EnhancedBluetoothSecurityDetector?
 
     @State private var pulseAnimation: Bool = false
     @State private var showConfirmationSheet: Bool = false
@@ -92,12 +93,14 @@ struct ComponentCard: View {
             }
         }
         .sheet(isPresented: $showConfirmationSheet) {
+            bluetoothDetector?.clearCache()
+        } content: {
             let config = ComponentConfiguration.create(
                 for: component,
-                networkType: networkType,
                 networkName: networkName,
                 locationDetector: locationDetector
             )
+
             ComponentConfirmationSheet(
                 component: component,
                 config: config,
@@ -109,8 +112,9 @@ struct ComponentCard: View {
                     showConfirmationSheet = false
                 },
                 locationDetector: locationDetector,
-                networkType: networkType,
-                networkName: networkName
+                networkName: networkName,
+                deviceLockDetector: deviceLockDetector,
+                bluetoothDetector: bluetoothDetector
             )
         }
     }
@@ -126,9 +130,10 @@ struct ComponentCard: View {
         ),
         needsAttention: false,
         onConfirm: { _ in },
-        networkType: "Network 1",
         networkName: "Network 2",
-        locationDetector: EnhancedLocationContextDetector()
+        locationDetector: EnhancedLocationContextDetector(),
+        deviceLockDetector: DeviceLockSecurityDetector(),
+        bluetoothDetector: EnhancedBluetoothSecurityDetector()
     )
     ComponentCard(
         component: SecurityComponent(
@@ -139,11 +144,11 @@ struct ComponentCard: View {
         ),
         needsAttention: true,
         onConfirm: { _ in },
-        networkType: "Network 1",
         networkName: "Network 2",
-        locationDetector: EnhancedLocationContextDetector()
+        locationDetector: EnhancedLocationContextDetector(),
+        deviceLockDetector: DeviceLockSecurityDetector(),
+        bluetoothDetector: EnhancedBluetoothSecurityDetector()
     )
-
     ComponentCard(
         component: SecurityComponent(
             name: "Wifi",
@@ -153,8 +158,9 @@ struct ComponentCard: View {
         ),
         needsAttention: true,
         onConfirm: { _ in },
-        networkType: "Network 1",
         networkName: "Network 2",
-        locationDetector: EnhancedLocationContextDetector()
+        locationDetector: EnhancedLocationContextDetector(),
+        deviceLockDetector: DeviceLockSecurityDetector(),
+        bluetoothDetector: EnhancedBluetoothSecurityDetector()
     )
 }

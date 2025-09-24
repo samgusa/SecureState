@@ -402,6 +402,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = SecureState;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Secure State checks your Bluetooth status to assess wireless exposure risk and help you make informed security decisions. No Bluetooth data is collected or shared.";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Secure State monitors Bluetooth to detect potential wireless security risks in your current environment.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Secure State tests your Face ID authentication to verify it's working properly as part of your device security assessment.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Secure State uses your location to assess security risks in your current environment, such as whether you're in a public space where extra caution is needed. Location data is processed locally and never shared.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -440,6 +441,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = SecureState;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Secure State checks your Bluetooth status to assess wireless exposure risk and help you make informed security decisions. No Bluetooth data is collected or shared.";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Secure State monitors Bluetooth to detect potential wireless security risks in your current environment.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Secure State tests your Face ID authentication to verify it's working properly as part of your device security assessment.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Secure State uses your location to assess security risks in your current environment, such as whether you're in a public space where extra caution is needed. Location data is processed locally and never shared.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

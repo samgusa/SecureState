@@ -27,10 +27,10 @@ class DeviceLockSecurityDetector: ObservableObject {
     private let context = LAContext()
 
     init() {
-        checkDeviceLocakCapabilities()
+        checkDeviceLockCapabilities()
     }
 
-    func checkDeviceLocakCapabilities() {
+    func checkDeviceLockCapabilities() {
         var error: NSError?
 
         // check if biometrics are available and enrolled
@@ -86,13 +86,13 @@ class DeviceLockSecurityDetector: ObservableObject {
 
         // scoring logic as specified
         if hasBiometrics && hasSixDigitPasscode && hasStrongPasscode && hasQuickAutoLock {
-            return 10 // perfect setup
+            return 15 // perfect setup
         } else if hasBiometrics && hasSixDigitPasscode && hasStrongPasscode {
-            return 9 // very good
+            return 12 // very good
         } else if hasBiometrics && (hasSixDigitPasscode || hasStrongPasscode) {
-            return 7 // good biometrics with decent passcode
+            return 10 // good biometrics with decent passcode
         } else if hasSixDigitPasscode && hasStrongPasscode && hasQuickAutoLock {
-            return 6 // strong passcode but no biometrics
+            return 7 // strong passcode but no biometrics
         } else if passcodeSet && (hasStrongPasscode || hasStrongPasscode) {
             return 4 // Basic but decent setup
         } else if passcodeSet {
@@ -122,15 +122,35 @@ class DeviceLockSecurityDetector: ObservableObject {
     }
 
     var biometricTypeString: String {
-        return ""
+        switch biometricType {
+        case .none: return "None"
+        case .touchID: return "Touch ID"
+        case .faceID: return "Face ID"
+        case .opticID: return "Optic ID"
+        @unknown default: return "Biometric Authenticator"
+        }
     }
 
     var statusDescription: String {
-        return ""
+        let biometricStatus = biometricAvailable ? "\(biometricTypeString) available" : "No biometrics"
+        let passcodeStatus = passcodeSet ? "Passcode set" : "No passcode"
+        let testStatus = biometricTestPassed ? "✓ Tested" : ""
+        return "\(biometricStatus), \(passcodeStatus) \(testStatus)".trimmingCharacters(in: .whitespaces)
     }
 
     var scoreExplanation: String {
-        return ""
+        let score = getSecurityScore()
+        if score >= 9 {
+            return "Excellent device security (\(score)/\(maxScore))"
+        } else if score >= 7 {
+            return "Good security with biometrics (\(score)/\(maxScore))"
+        } else if score >= 6 {
+            return "Decent passcode security (\(score)/\(maxScore))"
+        } else if score >= 2 {
+            return "Basic security setup (\(score)/\(maxScore))"
+        } else {
+            return "Weak device security (\(score)/\(maxScore))"
+        }
     }
 
 }

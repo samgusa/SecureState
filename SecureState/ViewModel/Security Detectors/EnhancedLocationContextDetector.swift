@@ -188,11 +188,6 @@ class EnhancedLocationContextDetector: NSObject, ObservableObject, CLLocationMan
     override init() {
         super.init()
         setUpLocationManager()
-        loadCacheContexts()
-    }
-
-    deinit {
-        saveCacheContexts()
     }
 
     private func setUpLocationManager() {
@@ -559,7 +554,6 @@ class EnhancedLocationContextDetector: NSObject, ObservableObject, CLLocationMan
         if locationContextCache.count > 50 {
             locationContextCache.removeFirst()
         }
-        saveCacheContexts()
     }
 
     // MARK: Rate Limiting for Geocoding Requests
@@ -611,14 +605,6 @@ class EnhancedLocationContextDetector: NSObject, ObservableObject, CLLocationMan
     private func recordGeocodingRequest() {
         lastGeocodingRequest = Date()
         geocodingRequestCount += 1
-    }
-
-    private func loadCacheContexts() {
-        locationContextCache = []
-    }
-
-    private func saveCacheContexts() {
-
     }
 
     var statusDescription: String {

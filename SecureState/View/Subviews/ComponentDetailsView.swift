@@ -13,8 +13,9 @@ struct ComponentDetailsView: View {
     @State private var showingConfirmationSheet: Bool = false
     @Binding var needsAttentionComponents: Set<String>
     let onConfirm: (SecurityComponent, Bool) -> Void
-    let networkType: String
     let networkName: String
+    let deviceLockDetector: DeviceLockSecurityDetector
+    let bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector
     let enhancedLocationContextDetector: EnhancedLocationContextDetector
     let realDeviceComponents: [SecurityComponent]
     let realSituationalComponents: [SecurityComponent]
@@ -22,7 +23,7 @@ struct ComponentDetailsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("\(String(describing: securitySection?.rawValue.capitalized ?? "")) Components")
+                Text("\(securitySection?.rawValue.capitalized ?? "") Components")
                     .font(.headline)
                     .fontWeight(.semibold)
 
@@ -46,9 +47,10 @@ struct ComponentDetailsView: View {
                         onConfirm: { confirmed in
                             onConfirm(component, confirmed)
                         },
-                        networkType: networkType,
                         networkName: networkName,
-                        locationDetector: enhancedLocationContextDetector
+                        locationDetector: enhancedLocationContextDetector,
+                        deviceLockDetector: deviceLockDetector,
+                        bluetoothDetector: bluetoothSecurityDetector
                     )
                 }
             }
@@ -89,8 +91,9 @@ struct ComponentDetailsView: View {
         onConfirm: { a, b in
 
         },
-        networkType: "testing",
         networkName: "Testing1",
+        deviceLockDetector: DeviceLockSecurityDetector(),
+        bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector(),
         enhancedLocationContextDetector: .init(),
         realDeviceComponents: [
             SecurityComponent(name: "VPN Status", score: 10, maxScore: 15, icon: "shield"),

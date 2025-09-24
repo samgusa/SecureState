@@ -20,8 +20,9 @@ struct CurrentTabContent: View {
     var situationalPercentage: Double
     var scoreColors: [Color]
     let onConfirm: (SecurityComponent, Bool) -> Void
-    let networkType: String
     let networkName: String
+    let deviceLockDetector: DeviceLockSecurityDetector
+    let bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector
     let enhancedLocationContextDetector: EnhancedLocationContextDetector
     let realDeviceComponents: [SecurityComponent]
     let realSituationalComponents: [SecurityComponent]
@@ -35,8 +36,9 @@ struct CurrentTabContent: View {
                     selectedComponentForConfirmation: $selectedComponentForConfirmation,
                     needsAttentionComponents: $needsAttentionComponents,
                     onConfirm: onConfirm,
-                    networkType: networkType,
                     networkName: networkName,
+                    deviceLockDetector: deviceLockDetector,
+                    bluetoothSecurityDetector: bluetoothSecurityDetector,
                     enhancedLocationContextDetector: enhancedLocationContextDetector,
                     realDeviceComponents: realDeviceComponents,
                     realSituationalComponents: realSituationalComponents
@@ -86,8 +88,9 @@ struct CurrentTabContent: View {
         scoreColors: [.red, .green],
         onConfirm: { a, b in
         },
-        networkType: "",
         networkName: "",
+        deviceLockDetector: DeviceLockSecurityDetector(),
+        bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector(),
         enhancedLocationContextDetector: .init(),
         realDeviceComponents: [
             SecurityComponent(name: "VPN Status", score: 10, maxScore: 20, icon: "shield"),

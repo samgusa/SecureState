@@ -79,8 +79,9 @@ struct Home: View {
                                             confirmed: confirmed
                                         )
                                 },
-                                networkType: secureState.networkType,
                                 networkName: secureState.networkName,
+                                deviceLockDetector: secureState.deviceLockDetector,
+                                bluetoothSecurityDetector: secureState.bluetoothSecurityDetector,
                                 enhancedLocationContextDetector: secureState.enhancedLocationContextDetector,
                                 realDeviceComponents: secureState.realDeviceComponents,
                                 realSituationalComponents: secureState.realSituationalComponents
@@ -125,7 +126,6 @@ struct Home: View {
                 await secureState.performSecurityRefresh()
             }
             .onReceive(NotificationCenter.default.publisher(for: .locationContextSelected)) { _ in
-                secureState.nearbyDeviceExposureDetector.updateLocationContext(isPublic: secureState.enhancedLocationContextDetector.isInPublicSpace)
                 Task {
                     await secureState.performSecurityRefresh()
                 }
@@ -137,9 +137,6 @@ struct Home: View {
         EmptyView()
             .onReceive(NotificationCenter.default.publisher(for: .locationContextSelected), perform: { notification in
                 print("Received location context selection notification")
-
-                // Update nearby device detector with new location context
-                secureState.nearbyDeviceExposureDetector.updateLocationContext(isPublic: secureState.enhancedLocationContextDetector.isInPublicSpace)
 
                 // Refresh all component
                 Task {

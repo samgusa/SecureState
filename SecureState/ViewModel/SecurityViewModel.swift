@@ -40,13 +40,13 @@ class SecurityViewModel: ObservableObject {
     let screenRecordingDetector = ScreenRecordingDetector()
     let iosVersionDetector = iOSVersionDetector()
     let vpnDetector = VPNStatusDetector()
-    let networkTypeDetector = NetworkTypeDetector()
+    let deviceLockDetector = DeviceLockSecurityDetector()
 
     // Situational Detectors
-    let enhancedLocationContextDetector = EnhancedLocationContextDetector()
-    let nearbyDeviceExposureDetector = NearbyDeviceExposureDetector()
+    let enhancedLocationContextDetector = EnhancedLocationContextDetector() // O
     let networkSecurityDetector = NetworkSecurityDetector()
     let timeBasedRiskDetector = TimeBasedRiskDetector()
+    let bluetoothSecurityDetector = EnhancedBluetoothSecurityDetector()
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -109,13 +109,6 @@ class SecurityViewModel: ObservableObject {
                 self?.objectWillChange.send()
             }
             .store(in: &cancellables)
-
-        networkTypeDetector.objectWillChange
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }
-            .store(in: &cancellables)
-
     }
 
     // MARK: - Computed Properties
@@ -183,7 +176,7 @@ class SecurityViewModel: ObservableObject {
         }
 
         return SecurityComponent(
-            name: "VPN Connection",
+            name: "VPN Status",
             score: score,
             maxScore: maxScore,
             icon: icon
@@ -213,29 +206,6 @@ class SecurityViewModel: ObservableObject {
         )
     }
 
-    func getRealNetworkComponent() async -> SecurityComponent {
-        let score = networkTypeDetector.getSecurityScore()
-        let maxScore: Int = 15
-        let needsConfirmation = networkTypeDetector.needsUserConfirmation()
-
-        // determine icon based on network type and confirmation state
-        let icon: String
-        if needsConfirmation {
-            icon = networkTypeDetector.currentNetworkType.icon + ".badge.questionmark"
-        } else if let confirmed = networkTypeDetector.isUserConfirmedSafe {
-            icon = confirmed ? networkTypeDetector.currentNetworkType.icon + ".badge.checkmark" : networkTypeDetector.currentNetworkType.icon + ".badge.xmark"
-        } else {
-            icon = networkTypeDetector.currentNetworkType.icon
-        }
-
-        return SecurityComponent(
-            name: "Network Type",
-            score: score,
-            maxScore: maxScore,
-            icon: icon
-        )
-    }
-
     func getRealScreenRecordingComponent() async -> SecurityComponent {
         return SecurityComponent(
             name: "Screen Recording Detection",
@@ -245,26 +215,49 @@ class SecurityViewModel: ObservableObject {
         )
     }
 
-    // MARK: Situational Components
-
-    func getRealBluetoothComponent() async -> SecurityComponent {
-        let score = nearbyDeviceExposureDetector.getSecurityScore()
-        let maxScore = 5
-        let needsConfirmation = nearbyDeviceExposureDetector.needsUserConfirmation()
-
-        let icon: String
-        if needsConfirmation {
-            icon = "questionmark.circle"
-        } else if score >= 4 {
-            icon = "antenna.radiowaves.left.and.right.slash"
-        } else if score >= 3 {
-            icon = "headphones"
+    func getRealDeviceLockComponent() async -> SecurityComponent {
+        let score = deviceLockDetector.getSecurityScore()
+        let maxScore = 15
+        var icon: String
+        if deviceLockDetector.biometricAvailable && deviceLockDetector.biometricTestPassed {
+            icon = deviceLockDetector.biometricType == .faceID ? "faceid" : "touchid"
+        } else if deviceLockDetector.biometricAvailable {
+            icon = "faceid"
+        } else if deviceLockDetector.passcodeSet {
+            icon = "lock.fill"
         } else {
-            icon = "exclamationmark.triangle"
+            icon = "lock.slash.fill"
         }
 
         return SecurityComponent(
-            name: "Nearby Device Exposure",
+            name: "Device Lock Security",
+            score: score,
+            maxScore: maxScore,
+            icon: icon
+        )
+    }
+
+    // MARK: Situational Components
+
+    func getRealBluetoothComponent() -> SecurityComponent {
+
+        let score = bluetoothSecurityDetector.getSecurityScore()
+        let maxScore: Int = 5
+
+        let icon: String
+        if !bluetoothSecurityDetector.bluetoothEnabled {
+            // Bluetooth disabled - show as secure
+            icon = "antenna.radiowaves.left.and.right.slash"
+        } else if bluetoothSecurityDetector.needsUserConfirmation() {
+            // Needs attention - either no scan or no user confirmation
+            icon = "antenna.radiowaves.left.and.right.circle.fill"
+        } else {
+            // all good
+            icon = "antenna.radiowaves.left.and.right"
+        }
+
+        return SecurityComponent(
+            name: "Bluetooth Security",
             score: score,
             maxScore: maxScore,
             icon: icon
@@ -344,9 +337,10 @@ class SecurityViewModel: ObservableObject {
         // Refreshing detectors (no location-heavy operations here)
         screenRecordingDetector.checkCurrentState()
         vpnDetector.checkVPNStatus()
-        networkTypeDetector.checkNetworkType()
         timeBasedRiskDetector.checkCurrentTime()
-        nearbyDeviceExposureDetector.checkCurrentState()
+        deviceLockDetector.checkDeviceLockCapabilities()
+        bluetoothSecurityDetector.checkBluetoothStatus()
+
 
         // Only do location check if we haven't done one recently AND we have permission
         if enhancedLocationContextDetector.hasLocationPermission && now.timeIntervalSince(enhancedLocationContextDetector.lastLocationUpdate) > 30.0 {
@@ -360,9 +354,6 @@ class SecurityViewModel: ObservableObject {
                 try? await Task.sleep(for: .milliseconds(100))
             }
         }
-
-        // Update location-dependant components
-        nearbyDeviceExposureDetector.updateLocationContext(isPublic: enhancedLocationContextDetector.isInPublicSpace)
 
         // Update components
         let updateDeviceComponents = await loadDeviceComponents()
@@ -398,9 +389,9 @@ class SecurityViewModel: ObservableObject {
     func loadRealComponents() async {
         screenRecordingDetector.checkCurrentState()
         vpnDetector.checkVPNStatus()
-        networkTypeDetector.checkNetworkType()
         timeBasedRiskDetector.checkCurrentTime()
-        nearbyDeviceExposureDetector.checkCurrentState()
+        bluetoothSecurityDetector.checkCurrentState()
+        deviceLockDetector.checkDeviceLockCapabilities()
 
         // Only do initial location check if we have permission
         if enhancedLocationContextDetector.hasLocationPermission {
@@ -414,9 +405,6 @@ class SecurityViewModel: ObservableObject {
                 try? await Task.sleep(for: .milliseconds(100))
             }
         }
-
-        nearbyDeviceExposureDetector.updateLocationContext(isPublic: enhancedLocationContextDetector.isInPublicSpace)
-
 
         let deviceComponents = await loadDeviceComponents()
         let situationComponents = await loadSituationComponents()
@@ -453,11 +441,6 @@ class SecurityViewModel: ObservableObject {
             attentionSet.insert("VPN Status")
         }
 
-        // Check network Type
-        if networkTypeDetector.needsUserConfirmation() {
-            attentionSet.insert("Network Type")
-        }
-
         // Check network Security
         if networkSecurityDetector.needsUserConfirmation() {
             attentionSet.insert("Network Security")
@@ -471,8 +454,12 @@ class SecurityViewModel: ObservableObject {
             attentionSet.insert("Time-based Risk")
         }
 
-        if nearbyDeviceExposureDetector.needsUserConfirmation() {
-            attentionSet.insert("Nearby Device Exposure")
+        if deviceLockDetector.needsUserConfirmation() {
+            attentionSet.insert("Device Lock Security")
+        }
+
+        if bluetoothSecurityDetector.needsUserConfirmation() {
+            attentionSet.insert("Bluetooth Security")
         }
 
         needsAttentionComponents = attentionSet
@@ -517,12 +504,6 @@ class SecurityViewModel: ObservableObject {
             } else {
                 vpnDetector.confirmNoVPN()
             }
-        case "Network Type":
-            if confirmed {
-                networkTypeDetector.confirmNetworkSafe()
-            } else {
-                networkTypeDetector.confirmNetworkUnsafe()
-            }
         case "Network Security":
             handleNetworkSecurityConfirmation(confirmed)
             return
@@ -531,12 +512,14 @@ class SecurityViewModel: ObservableObject {
             print("Location context confirmed - refreshing components")
             break
 
-        case "Nearby Device Exposure":
-            if confirmed {
-                nearbyDeviceExposureDetector.confirmAccessoryUse()
-            } else {
-                nearbyDeviceExposureDetector.confirmedNoAccesorryUse()
-            }
+        case "Device Lock Security":
+            // Device Lock has custom confirmation flow, just refresh
+            break
+
+        case "Bluetooth Security":
+            // this will be handled by custom sheet
+            break
+
         default:
             break
         }
@@ -585,13 +568,12 @@ class SecurityViewModel: ObservableObject {
         async let screenRecordingComponent = getRealScreenRecordingComponent()
         async let iOSVersionComponent = getRealIOSVersionComponent()
         async let vpnComponent = getRealVPNComponent()
-        async let networkComponent = getRealNetworkComponent()
-
+        async let deviceLockComponent = getRealDeviceLockComponent()
         return await [
             vpnComponent,
             iOSVersionComponent,
-            networkComponent,
-            screenRecordingComponent
+            screenRecordingComponent,
+            deviceLockComponent
         ]
     }
 
@@ -611,9 +593,6 @@ class SecurityViewModel: ObservableObject {
     }
 
     func refreshComponentsAfterConfirmation() async {
-        // Update location context for nearby device detector
-        nearbyDeviceExposureDetector.updateLocationContext(isPublic: enhancedLocationContextDetector.isInPublicSpace)
-
         // Reload components
         let updateDeviceComponents = await loadDeviceComponents()
         let updateSituationComponents = await loadSituationComponents()

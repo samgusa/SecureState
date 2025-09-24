@@ -17,8 +17,13 @@ struct ComponentConfirmationSheet: View {
 
     // Location-specific properties
     let locationDetector: EnhancedLocationContextDetector?
-    let networkType: String?
     let networkName: String?
+
+    // Device Lock
+    let deviceLockDetector: DeviceLockSecurityDetector?
+
+    // Bluetooth
+    let bluetoothDetector: EnhancedBluetoothSecurityDetector?
 
     @State private var showPreciseLocation = false
     @State private var mapRegion = MKCoordinateRegion()
@@ -123,6 +128,10 @@ struct ComponentConfirmationSheet: View {
         VStack(spacing: 20) {
             if config.name == "Location Context" {
                 locationContextView
+            } else if config.name == "Device Lock Security" {
+                deviceLockContextView
+            } else if config.name == "Bluetooth Security" {
+                bluetoothSecurityContextView
             } else {
                 // Fallback to contextual content
                 contextualConfirmationContent
@@ -184,6 +193,50 @@ struct ComponentConfirmationSheet: View {
                 )
             } else {
                 Text("Location detector not available")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // MARK: - Device Lock View
+    private var deviceLockContextView: some View {
+        VStack(spacing: 20) {
+            if let detector = deviceLockDetector {
+                DeviceLockStatusView(detector: detector)
+
+                if detector.biometricAvailable {
+                    DeviceBiometricTestView(detector: detector)
+                }
+
+                DeviceLockQuestionsView(
+                    detector: detector) {
+                        // refresh scores after user answers
+                        onConfirm(true)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            onDismiss()
+                        }
+                    }
+            } else {
+                Text("Device lock detector not available")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // MARK: - Bluetooth Security View
+    private var bluetoothSecurityContextView: some View {
+        VStack(spacing: 20) {
+            if let bluetoothDetector = bluetoothDetector {
+                BluetoothSecurityContextView(
+                    detector: bluetoothDetector) { safety in
+                        bluetoothDetector.confirmEnvironmentSafety(safety)
+                        onConfirm(true)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            onDismiss()
+                        }
+                    }
+            } else {
+                Text("Bluetooth detector not available")
                     .foregroundStyle(.secondary)
             }
         }
@@ -263,9 +316,6 @@ struct ComponentConfirmationSheet: View {
         case "VPN Status":
             return "Check Settings > VPN & Device Management > VPN for third-party VPNs, or Settings > Privacy & Security > iCloud Private Relay for Apple's service."
         case "Network Type":
-            if let networkType = networkType {
-                return "Currently connected to: \(networkType)"
-            }
             return nil
         default:
             return nil
@@ -308,8 +358,9 @@ struct ComponentConfirmationSheet: View {
 
     },
                                locationDetector: nil,
-                               networkType: "Testing",
-                               networkName: ""
+                               networkName: "",
+                               deviceLockDetector: .init(),
+                               bluetoothDetector: .init()
     )
 }
 

@@ -90,6 +90,10 @@ class EnhancedBluetoothSecurityDetector: NSObject, ObservableObject, CBCentralMa
         }
     }
 
+    func checkBluetoothStatus() {
+        guard bluetoothEnabled else { return }
+    }
+
     func startScanning() {
         guard bluetoothEnabled else { return }
 
@@ -194,5 +198,4 @@ class EnhancedBluetoothSecurityDetector: NSObject, ObservableObject, CBCentralMa
             self.processPendingDeviceUpdates()
         })
     }
-
 }

@@ -87,6 +87,30 @@ extension ComponentConfiguration {
                 negativeText: ""
             )
 
+        case "Device Lock Security":
+            return ComponentConfiguration(
+                name: "Device Lock Security",
+                type: .complex,
+                icon: component.icon,
+                title: "Device Lock Security",
+                description: "Your device lock is the first line of defense against physical access.",
+                question: "Let's verify your device security setup",
+                positiveText: "",
+                negativeText: ""
+            )
+
+        case "Bluetooth Security":
+            return ComponentConfiguration(
+                name: "Bluetooth Security",
+                type: .complex,
+                icon: component.icon,
+                title: "Bluetooth Environment Safety",
+                description: "Assess the security risk from nearby Bluetooth devices in your current environment.",
+                question: "How safe does this Bluetooth environment feel?",
+                positiveText: "",
+                negativeText: ""
+            )
+
             // Add other components...
         default:
             return ComponentConfiguration(
