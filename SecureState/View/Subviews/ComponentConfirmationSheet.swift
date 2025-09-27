@@ -18,52 +18,61 @@ struct ComponentConfirmationSheet: View {
     // Location-specific properties
     let locationDetector: EnhancedLocationContextDetector?
     let networkName: String?
-
-    // Device Lock
     let deviceLockDetector: DeviceLockSecurityDetector?
-
-    // Bluetooth
     let bluetoothDetector: EnhancedBluetoothSecurityDetector?
+    let environmentDetector: EnvironmentalSecurityDetector?
 
     @State private var showPreciseLocation = false
     @State private var mapRegion = MKCoordinateRegion()
     @State private var hideLocationTimer: Timer?
 
+    @State private var selectedMode: DetailMode = .assessment
+
+    enum DetailMode: String, CaseIterable {
+        case assessment = "Assessment"
+        case education = "Learn More"
+
+        var icon: String {
+            switch self {
+            case .assessment: return "checkmark.shield.fill"
+            case .education: return "graduationcap.fill"
+            }
+        }
+    }
+
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 20) {
                     // Header with icon and title
                     headerSection
 
-                    // Dynamic content based on component type
-                    switch config.type {
-                    case .simple:
-                        simpleConfirmationContent
-                    case .contextual:
-                        contextualConfirmationContent
-                    case .complex:
-                        complexConfirmationContent
+                    modeSelector
+
+                    switch selectedMode {
+                    case .assessment:
+                        assessmentContent
+                    case .education:
+                        educationalContent
                     }
 
-                    Spacer(minLength: 24)
+                    Spacer(minLength: 20)
 
-                    // Action buttons
-                    actionButtons
+                    if selectedMode == .assessment && config.type != .complex {
+                        // Action buttons
+                        actionButtons
+                    }
                 }
                 .padding()
             }
             .navigationTitle(config.title)
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
-                trailing: Button("Cancel") { onDismiss() }
+                trailing: Button("Done") { onDismiss() }
             )
         }
-        .presentationDetents([config.type.presentationDetent])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
-        .onAppear {
-            setupForComponentType()
-        }
     }
 
     // MARK: - Header Section
@@ -84,11 +93,143 @@ struct ComponentConfirmationSheet: View {
                     .font(.title2)
                     .fontWeight(.bold)
 
-                Text(config.description)
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                HStack(spacing: 16) {
+                    // Current Score
+                    VStack(spacing: 4) {
+                        Text("\(component.score)")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundStyle(component.status.color)
+
+                        Text("Current Score")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Text("/")
+                        .font(.title)
+                        .foregroundStyle(.secondary)
+
+                    // Max Score
+                    VStack(spacing: 4) {
+                        Text("\(component.maxScore)")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.secondary)
+
+                        Text("Maximum")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                // percentage and status
+                let percentage = Double(component.score) / Double(component.maxScore)
+                ProgressView(value: percentage)
+                    .tint(component.status.color)
+                    .scaleEffect(y: 2)
+
+                Text("\(Int(percentage * 100))% - \(component.status == .good ? "Good" : component.status == .warning ? "Needs Attention" : "Critical")")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(component.status.color)
             }
+        }
+    }
+
+    private var modeSelector: some View {
+        HStack(spacing: 0) {
+            ForEach(DetailMode.allCases, id: \.self) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        selectedMode = mode
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: mode.icon)
+                            .font(.system(size: 12, weight: .medium))
+
+                        Text(mode.rawValue)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundStyle(selectedMode == mode ? .white : .primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        selectedMode == mode ? Color.blue : Color.clear
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.systemGray4), lineWidth: 0.5)
+        }
+    }
+
+    @ViewBuilder
+    private var assessmentContent: some View {
+        VStack(spacing: 20) {
+            Text(config.description)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            switch config.type {
+            case .simple: simpleConfirmationContent
+            case .contextual: contextualConfirmationContent
+            case .complex: complexConfirmationContent
+            }
+        }
+    }
+
+    private var educationalContent: some View {
+        let educational = config.educationalContent
+
+        return VStack(alignment: .leading, spacing: 24) {
+            // What it does
+            EducationSection(
+                title: "What this Protects",
+                icon: "shield.fill",
+                color: .blue,
+                content: educational.explanation
+            )
+
+            // How to check/find it
+            EducationSection(
+                title: "How to Check",
+                icon: "gear",
+                color: .gray,
+                content: educational.howToCheck
+            )
+
+            // Why it matters
+            EducationSection(
+                title: "Why It Matters",
+                icon: "exclamationmark.triangle.fill",
+                color: .orange,
+                content: educational.whyItMatters
+            )
+
+            // How to improve
+            StepsEducationSection(
+                title: "How to Improve",
+                icon: "checkmark.circle.fill",
+                color: .green,
+                steps: educational.improvementSteps
+            )
+
+            // Risk scenarios
+            ScenariosEducationSection(
+                title: "What Could Go Wrong",
+                icon: "xmark.circle.fill",
+                color: .red,
+                scenarios: educational.riskScenarios
+            )
         }
     }
 
@@ -114,12 +255,7 @@ struct ComponentConfirmationSheet: View {
                 .fontWeight(.medium)
                 .multilineTextAlignment(.center)
 
-            // Network Security specific content
-            if config.name == "Network Security" {
-                networkSecurityContextView
-            }
-
-            // Add other contextual components here as needed
+            // DELETE
         }
     }
 
@@ -136,28 +272,6 @@ struct ComponentConfirmationSheet: View {
                 // Fallback to contextual content
                 contextualConfirmationContent
             }
-        }
-    }
-
-    // MARK: - Network Security Context
-    private var networkSecurityContextView: some View {
-        VStack(spacing: 16) {
-
-            VStack(spacing: 12) {
-                networkTypeCard("Private Networks",
-                               "Home, work, or networks you control",
-                               "house.fill", .green)
-
-                networkTypeCard("Public Networks",
-                               "Coffee shops, airports, hotels",
-                               "wifi", .orange)
-
-                networkTypeCard("Cellular Connection",
-                               "Private connection through your carrier",
-                               "antenna.radiowaves.left.and.right", .blue)
-            }
-
-            infoBox("Shared networks allow others to potentially intercept traffic or discover your device.")
         }
     }
 
@@ -242,6 +356,27 @@ struct ComponentConfirmationSheet: View {
         }
     }
 
+    // MARK: Environmental Security View
+    private var environmentalSecurityContextView: some View {
+        VStack(spacing: 20) {
+            if let detector = environmentDetector {
+                EnvironmentalSecurityAssessmentView(
+                    detector: detector,
+                    showPreciseLocation: $showPreciseLocation,
+                    mapRegion: $mapRegion,
+                    hideLocationTimer: $hideLocationTimer) {
+                        onConfirm(true)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            onDismiss()
+                        }
+                    }
+            } else {
+                Text("Environmental security detector not available")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
     // MARK: - Action Buttons
     private var actionButtons: some View {
         VStack(spacing: 12) {
@@ -269,7 +404,7 @@ struct ComponentConfirmationSheet: View {
             .foregroundStyle(.secondary)
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(8)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private func networkTypeCard(_ title: String, _ description: String, _ icon: String, _ color: Color) -> some View {
@@ -293,7 +428,7 @@ struct ComponentConfirmationSheet: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private func infoBox(_ text: String) -> some View {
@@ -307,7 +442,7 @@ struct ComponentConfirmationSheet: View {
         }
         .padding()
         .background(Color.blue.opacity(0.1))
-        .cornerRadius(8)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     // MARK: - Helper Methods
@@ -315,20 +450,8 @@ struct ComponentConfirmationSheet: View {
         switch config.name {
         case "VPN Status":
             return "Check Settings > VPN & Device Management > VPN for third-party VPNs, or Settings > Privacy & Security > iCloud Private Relay for Apple's service."
-        case "Network Type":
-            return nil
         default:
             return nil
-        }
-    }
-
-    private func setupForComponentType() {
-        if config.name == "Location Context", let detector = locationDetector,
-           let snapshot = detector.currentLocationSnapshot {
-            mapRegion = MKCoordinateRegion(
-                center: snapshot.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            )
         }
     }
 }
@@ -360,7 +483,8 @@ struct ComponentConfirmationSheet: View {
                                locationDetector: nil,
                                networkName: "",
                                deviceLockDetector: .init(),
-                               bluetoothDetector: .init()
+                               bluetoothDetector: .init(),
+                               environmentDetector: EnvironmentalSecurityDetector()
     )
 }
 

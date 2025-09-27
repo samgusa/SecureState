@@ -15,17 +15,14 @@ struct ComponentCard: View {
     let locationDetector: EnhancedLocationContextDetector?
     let deviceLockDetector: DeviceLockSecurityDetector?
     let bluetoothDetector: EnhancedBluetoothSecurityDetector?
+    let environmentalDetector: EnvironmentalSecurityDetector?
 
     @State private var pulseAnimation: Bool = false
     @State private var showConfirmationSheet: Bool = false
 
     var body: some View {
         Button {
-            if needsAttention {
-                showConfirmationSheet = true
-            } else {
-                onConfirm(true)
-            }
+            showConfirmationSheet = true
         } label: {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -55,7 +52,6 @@ struct ComponentCard: View {
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
-
                 }
 
                 Text(component.name)
@@ -65,21 +61,7 @@ struct ComponentCard: View {
                     .foregroundStyle(.primary)
 
                 // Progress bar
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Rectangle()
-                            .fill(Color(.systemGray5))
-                            .frame(height: 4)
-                            .clipShape(RoundedRectangle(cornerRadius: 2))
-
-                        Rectangle()
-                            .fill(needsAttention ? .orange : component.status.color)
-                            .frame(width: geometry.size.width * component.percentage, height: 4)
-                            .clipShape(RoundedRectangle(cornerRadius: 2))
-                            .animation(.easeInOut(duration: 0.8), value: component.percentage)
-                    }
-                }
-                .frame(height: 4)
+                ProgressBar(score: component.score, maxScore: component.maxScore, color: needsAttention ? .orange : component.status.color)
             }
             .padding()
             .background(needsAttention ? Color.orange.opacity(0.05) : Color(.systemBackground))
@@ -114,7 +96,8 @@ struct ComponentCard: View {
                 locationDetector: locationDetector,
                 networkName: networkName,
                 deviceLockDetector: deviceLockDetector,
-                bluetoothDetector: bluetoothDetector
+                bluetoothDetector: bluetoothDetector,
+                environmentDetector: environmentalDetector
             )
         }
     }
@@ -133,7 +116,8 @@ struct ComponentCard: View {
         networkName: "Network 2",
         locationDetector: EnhancedLocationContextDetector(),
         deviceLockDetector: DeviceLockSecurityDetector(),
-        bluetoothDetector: EnhancedBluetoothSecurityDetector()
+        bluetoothDetector: EnhancedBluetoothSecurityDetector(),
+        environmentalDetector: EnvironmentalSecurityDetector()
     )
     ComponentCard(
         component: SecurityComponent(
@@ -147,7 +131,8 @@ struct ComponentCard: View {
         networkName: "Network 2",
         locationDetector: EnhancedLocationContextDetector(),
         deviceLockDetector: DeviceLockSecurityDetector(),
-        bluetoothDetector: EnhancedBluetoothSecurityDetector()
+        bluetoothDetector: EnhancedBluetoothSecurityDetector(),
+        environmentalDetector: EnvironmentalSecurityDetector()
     )
     ComponentCard(
         component: SecurityComponent(
@@ -161,6 +146,7 @@ struct ComponentCard: View {
         networkName: "Network 2",
         locationDetector: EnhancedLocationContextDetector(),
         deviceLockDetector: DeviceLockSecurityDetector(),
-        bluetoothDetector: EnhancedBluetoothSecurityDetector()
+        bluetoothDetector: EnhancedBluetoothSecurityDetector(),
+        environmentalDetector: EnvironmentalSecurityDetector()
     )
 }

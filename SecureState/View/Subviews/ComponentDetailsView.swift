@@ -50,7 +50,9 @@ struct ComponentDetailsView: View {
                         networkName: networkName,
                         locationDetector: enhancedLocationContextDetector,
                         deviceLockDetector: deviceLockDetector,
-                        bluetoothDetector: bluetoothSecurityDetector
+                        bluetoothDetector: bluetoothSecurityDetector,
+                        // FIX
+                        environmentalDetector: EnvironmentalSecurityDetector()
                     )
                 }
             }

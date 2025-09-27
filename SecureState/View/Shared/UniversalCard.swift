@@ -102,13 +102,13 @@ struct ProgressBar: View {
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(Color(.systemGray5))
-                    .frame(height: 6)
+                    .frame(height: 4)
                 RoundedRectangle(cornerRadius: 3)
                     .fill(color)
-                    .frame(width: geometry.size.width * Double(score) / Double(maxScore), height: 6)
+                    .frame(width: geometry.size.width * Double(score) / Double(maxScore), height: 4)
             }
         }
-        .frame(height: 6)
+        .frame(height: 4)
     }
 }
 
