@@ -70,7 +70,7 @@ class TimeBasedRiskDetector: ObservableObject {
         lastChecked = now
     }
 
-    private func determineRiskLevel(for hour: Int) -> TimeRiskLevel {
+    func determineRiskLevel(for hour: Int) -> TimeRiskLevel {
         switch hour {
         case 23...23, 0...5: // 11 PM to 5:59 AM - High risk (very late/very early)
             return .high

@@ -76,13 +76,17 @@ struct Home: View {
                                     secureState
                                         .handleComponentConfirmation(
                                             component: component,
-                                            confirmed: confirmed
+                                            confirmed: true
                                         )
                                 },
                                 networkName: secureState.networkName,
                                 deviceLockDetector: secureState.deviceLockDetector,
                                 bluetoothSecurityDetector: secureState.bluetoothSecurityDetector,
-                                enhancedLocationContextDetector: secureState.enhancedLocationContextDetector,
+                                environmentalSecurityDetector: secureState.environmentSecurityDetector,
+                                vpnDetector: secureState.vpnDetector,
+                                screenRecordingDetector: secureState.screenRecordingDetector,
+                                iosVersionDetector: secureState.iosVersionDetector,
+                                timeBasedDetector: secureState.timeBasedRiskDetector,
                                 realDeviceComponents: secureState.realDeviceComponents,
                                 realSituationalComponents: secureState.realSituationalComponents
                             )
@@ -136,13 +140,10 @@ struct Home: View {
     var fixedNotificationReceiver: some View {
         EmptyView()
             .onReceive(NotificationCenter.default.publisher(for: .locationContextSelected), perform: { notification in
-                print("Received location context selection notification")
-
-                // Refresh all component
-                Task {
-                    await secureState.refreshComponentsAfterConfirmation()
+                if let context = notification.object as? EnvironmentalSecurityDetector.EnvironmentType {
+                    secureState.environmentSecurityDetector.selectEnvironmentType(context)
+                    secureState.updateSingleComponent(identifier: .environmentalSecurity)
                 }
-
             })
     }
 }

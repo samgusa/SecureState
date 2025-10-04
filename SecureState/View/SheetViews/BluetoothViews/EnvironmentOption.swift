@@ -69,14 +69,30 @@ struct EnvironmentOption: View {
 
 #Preview {
     EnvironmentOption(
+        safety: .safe,
+        title: "Safe",
+        description: "I recognize most devices or I'm in a trusted environment",
+        icon: "checkmark.shield.fill",
+        color: .green,
+        isSelected: false,
+        onSelect: {  }
+    )
+    EnvironmentOption(
         safety: .caution,
-        title: "Caution",
-        description: "This is a caution",
-        icon: "wifi",
+        title: "Cautious",
+        description: "Some unknown devices, but environment seems normal",
+        icon: "exclamationmark.shield.fill",
+        color: .orange,
+        isSelected: true,
+        onSelect: {  }
+    )
+    EnvironmentOption(
+        safety: .unsafe,
+        title: "Unsafe",
+        description: "Many suspicious devices or I feel exposed",
+        icon: "xmark.shield.fill",
         color: .red,
         isSelected: false,
-        onSelect: {
-
-        }
+        onSelect: {  }
     )
 }

@@ -11,12 +11,16 @@ struct ComponentDetailsView: View {
     @Binding var securitySection: SecuritySection?
     @Binding var selectedComponentForConfirmation: SecurityComponent?
     @State private var showingConfirmationSheet: Bool = false
-    @Binding var needsAttentionComponents: Set<String>
+    @Binding var needsAttentionComponents: Set<ComponentIdentifier>
     let onConfirm: (SecurityComponent, Bool) -> Void
     let networkName: String
     let deviceLockDetector: DeviceLockSecurityDetector
     let bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector
-    let enhancedLocationContextDetector: EnhancedLocationContextDetector
+    let environmentalSecurityDetector: EnvironmentalSecurityDetector
+    let vpnDetector: VPNStatusDetector
+    let screenRecordingDetector: ScreenRecordingDetector
+    let iosVersionDetector: iOSVersionDetector
+    let timeBasedDetector: TimeBasedRiskDetector
     let realDeviceComponents: [SecurityComponent]
     let realSituationalComponents: [SecurityComponent]
 
@@ -38,24 +42,22 @@ struct ComponentDetailsView: View {
                 .foregroundStyle(.blue)
             }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                let componentsToShow = getComponents(for: securitySection ?? .device)
-                ForEach(componentsToShow, id: \.name) { component in
-                    ComponentCard(
-                        component: component,
-                        needsAttention: needsAttentionComponents.contains(component.name),
-                        onConfirm: { confirmed in
-                            onConfirm(component, confirmed)
-                        },
-                        networkName: networkName,
-                        locationDetector: enhancedLocationContextDetector,
-                        deviceLockDetector: deviceLockDetector,
-                        bluetoothDetector: bluetoothSecurityDetector,
-                        // FIX
-                        environmentalDetector: EnvironmentalSecurityDetector()
-                    )
-                }
-            }
+            EnhancedComponentGrid(
+                deviceComponents: securitySection == .device ? realDeviceComponents : [],
+                situationComponents: securitySection == .situational ? realSituationalComponents : [],
+                needsAttentionComponents: needsAttentionComponents,
+                onComponentTap: { component, _ in
+                    onConfirm(component, true)
+                },
+                networkName: environmentalSecurityDetector.currentNetworkName,
+                deviceLockDetector: deviceLockDetector,
+                bluetoothDetector: bluetoothSecurityDetector,
+                environmentDetector: environmentalSecurityDetector,
+                vpnDetector: vpnDetector,
+                screenRecordingDetector: screenRecordingDetector,
+                iosVersionDetector: iosVersionDetector,
+                timeBasedDetector: timeBasedDetector
+            )
         }
         .padding()
         .background(Color(.systemGray6))
@@ -83,7 +85,7 @@ struct ComponentDetailsView: View {
         securitySection: .constant(.situational),
         selectedComponentForConfirmation: .constant(
             SecurityComponent(
-                name: "Password Manager",
+                identifier: .deviceLock,
                 score: 10,
                 maxScore: 10,
                 icon: "key"
@@ -96,18 +98,21 @@ struct ComponentDetailsView: View {
         networkName: "Testing1",
         deviceLockDetector: DeviceLockSecurityDetector(),
         bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector(),
-        enhancedLocationContextDetector: .init(),
+        environmentalSecurityDetector: EnvironmentalSecurityDetector(),
+        vpnDetector: VPNStatusDetector(),
+        screenRecordingDetector: ScreenRecordingDetector(),
+        iosVersionDetector: iOSVersionDetector(),
+        timeBasedDetector: TimeBasedRiskDetector(),
         realDeviceComponents: [
-            SecurityComponent(name: "VPN Status", score: 10, maxScore: 15, icon: "shield"),
-            SecurityComponent(name: "iOS Version", score: 8, maxScore: 10, icon: "gear"),
-            SecurityComponent(name: "Network Type", score: 6, maxScore: 10, icon: "wifi"),
-            SecurityComponent(name: "Screen Recording", score: 5, maxScore: 5, icon: "eye.slash")
+            SecurityComponent(identifier: .vpnStatus, score: 10, maxScore: 15, icon: "shield"),
+            SecurityComponent(identifier: .iosVersion, score: 8, maxScore: 10, icon: "gear"),
+            SecurityComponent(identifier: .deviceLock, score: 6, maxScore: 10, icon: "wifi"),
+            SecurityComponent(identifier: .screenRecording, score: 5, maxScore: 5, icon: "eye.slash")
         ],
         realSituationalComponents: [
-            SecurityComponent(name: "Public Wi-Fi", score: 10, maxScore: 15, icon: "wifi.exclamationmark"),
-            SecurityComponent(name: "Location Context", score: 8, maxScore: 10, icon: "location"),
-            SecurityComponent(name: "Time Risk", score: 5, maxScore: 5, icon: "clock"),
-            SecurityComponent(name: "Background Activity", score: 5, maxScore: 5, icon: "app.badge")
+            SecurityComponent(identifier: .environmentalSecurity, score: 8, maxScore: 25, icon: "shield"),
+            SecurityComponent(identifier: .timeBasedRisk, score: 5, maxScore: 5, icon: "clock"),
+            SecurityComponent(identifier: .bluetoothSecurity, score: 5, maxScore: 5, icon: "app.badge")
         ]
     )
 }

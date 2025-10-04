@@ -26,7 +26,10 @@ struct BluetoothEnvironmentSelectionView: View {
                     icon: "checkmark.shield.fill",
                     color: .green,
                     isSelected: detector.userEnvironmentConfirmation == .safe,
-                    onSelect: { onSelection(.safe) }
+                    onSelect: {
+                        detector.confirmEnvironmentSafety(.safe)
+                        onSelection(.safe)
+                    }
                 )
                 EnvironmentOption(
                     safety: .caution,
@@ -35,7 +38,10 @@ struct BluetoothEnvironmentSelectionView: View {
                     icon: "exclamationmark.shield.fill",
                     color: .orange,
                     isSelected: detector.userEnvironmentConfirmation == .caution,
-                    onSelect: { onSelection(.caution) }
+                    onSelect: {
+                        detector.confirmEnvironmentSafety(.caution)
+                        onSelection(.caution)
+                    }
                 )
                 EnvironmentOption(
                     safety: .unsafe,
@@ -43,8 +49,11 @@ struct BluetoothEnvironmentSelectionView: View {
                     description: "Many suspicious devices or I feel exposed",
                     icon: "xmark.shield.fill",
                     color: .red,
-                    isSelected: detector.userEnvironmentConfirmation == .safe,
-                    onSelect: { onSelection(.safe) }
+                    isSelected: detector.userEnvironmentConfirmation == .unsafe,
+                    onSelect: {
+                        detector.confirmEnvironmentSafety(.unsafe)
+                        onSelection(.unsafe)
+                    }
                 )
             }
 

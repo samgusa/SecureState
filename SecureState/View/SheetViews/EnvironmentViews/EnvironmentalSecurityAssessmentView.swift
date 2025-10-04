@@ -297,7 +297,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                     }
                 } label: {
                     HStack {
-                        Image(systemName: "house.wifi.fill")
+                        Image(systemName: "house.badge.wifi")
                             .foregroundStyle(.white)
                         Text("This is my home/work network")
                             .fontWeight(.medium)
@@ -575,7 +575,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                 Button("Complete Assessment") {
                     completeAssessment()
                 }
-                .buttonStyle(PlainButtonStyle())
+                .buttonStyle(PrimaryButtonStyle())
             }
         }
     }

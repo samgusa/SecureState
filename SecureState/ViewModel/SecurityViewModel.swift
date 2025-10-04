@@ -21,7 +21,7 @@ class SecurityViewModel: ObservableObject {
     @Published var scrollOffset: CGFloat = 0
     @Published var lastRefreshTime = Date()
 
-    @Published var needsAttentionComponents: Set<String> = []
+    @Published var needsAttentionComponents: Set<ComponentIdentifier> = []
     // Change when Create network Type
     @Published var networkType: String = ""
     @Published var networkName: String = ""
@@ -47,6 +47,7 @@ class SecurityViewModel: ObservableObject {
     let networkSecurityDetector = NetworkSecurityDetector()
     let timeBasedRiskDetector = TimeBasedRiskDetector()
     let bluetoothSecurityDetector = EnhancedBluetoothSecurityDetector()
+    let environmentSecurityDetector = EnvironmentalSecurityDetector()
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -176,7 +177,7 @@ class SecurityViewModel: ObservableObject {
         }
 
         return SecurityComponent(
-            name: "VPN Status",
+            identifier: .vpnStatus,
             score: score,
             maxScore: maxScore,
             icon: icon
@@ -199,7 +200,7 @@ class SecurityViewModel: ObservableObject {
         }
 
         return SecurityComponent(
-            name: "iOS Version",
+            identifier: .iosVersion,
             score: score,
             maxScore: maxScore,
             icon: icon
@@ -208,7 +209,7 @@ class SecurityViewModel: ObservableObject {
 
     func getRealScreenRecordingComponent() async -> SecurityComponent {
         return SecurityComponent(
-            name: "Screen Recording Detection",
+            identifier: .screenRecording,
             score: screenRecordingDetector.getSecurityScore(),
             maxScore: 5,
             icon: screenRecordingDetector.isScreenBeingCaptured ? "eye" : "eye.slash"
@@ -230,7 +231,7 @@ class SecurityViewModel: ObservableObject {
         }
 
         return SecurityComponent(
-            name: "Device Lock Security",
+            identifier: .deviceLock,
             score: score,
             maxScore: maxScore,
             icon: icon
@@ -240,9 +241,8 @@ class SecurityViewModel: ObservableObject {
     // MARK: Situational Components
 
     func getRealBluetoothComponent() -> SecurityComponent {
-
         let score = bluetoothSecurityDetector.getSecurityScore()
-        let maxScore: Int = 5
+        let maxScore: Int = 15
 
         let icon: String
         if !bluetoothSecurityDetector.bluetoothEnabled {
@@ -257,7 +257,7 @@ class SecurityViewModel: ObservableObject {
         }
 
         return SecurityComponent(
-            name: "Bluetooth Security",
+            identifier: .bluetoothSecurity,
             score: score,
             maxScore: maxScore,
             icon: icon
@@ -270,56 +270,55 @@ class SecurityViewModel: ObservableObject {
         let riskLevel = timeBasedRiskDetector.currentTimeRisk
 
         return SecurityComponent(
-            name: "Time-based Risk",
+            identifier: .timeBasedRisk,
             score: score,
             maxScore: maxScore,
             icon: riskLevel.icon
         )
     }
 
-    func getRealLocationComponent() -> SecurityComponent {
-        let score = enhancedLocationContextDetector.getSecurityScore()
-        let maxScore: Int = 15
+    func getRealEnvironmentalSecurityComponent() async -> SecurityComponent {
+        let score = environmentSecurityDetector.getEnvironmentScore()
+        let maxScore: Int = 25
 
         let icon: String
-        if let selectedContext = enhancedLocationContextDetector.userSelectedContext {
-            icon = selectedContext.icon
-        } else if !enhancedLocationContextDetector.hasLocationPermission {
-            icon = "location.slash"
+        if environmentSecurityDetector.needsUserConfirmation() {
+            icon = "shield.lefthalf.filled.trianglebadge.exclamationmark"
         } else {
-            icon = "location.circle"
+            let percentage = Double(score) / Double(maxScore)
+            if percentage >= 0.8 {
+                icon = "shield.lefthalf.filled"
+            } else if percentage >= 0.5 {
+                icon = "shield.lefthalf.filled.trianglebadge.exclamationmark"
+            } else {
+                icon = "shield.slash"
+            }
         }
-
         return SecurityComponent(
-            name: "Location Context",
+            identifier: .environmentalSecurity,
             score: score,
             maxScore: maxScore,
             icon: icon
         )
     }
 
-    func getRealNetworkSecurityComponent() async -> SecurityComponent {
-        let score = networkSecurityDetector.getSecurityScore()
-        let maxScore = 20
-        let needsConfirmation = networkSecurityDetector.needsUserConfirmation()
-
-        let icon: String
-        if needsConfirmation {
-            icon = "network.slash"
-        } else if score >= 18 {
-            icon = "shield.lefthalf.filled"
-        } else if score >= 10 {
-            icon = "network"
-        } else {
-            icon = "wifi.exclamationmark"
+    func getSingleUpdatedComponent(identifier: ComponentIdentifier) async -> SecurityComponent {
+        switch identifier {
+        case .screenRecording:
+            return await getRealScreenRecordingComponent()
+        case .iosVersion:
+            return await getRealIOSVersionComponent()
+        case .vpnStatus:
+            return await getRealVPNComponent()
+        case .deviceLock:
+            return await getRealDeviceLockComponent()
+        case .environmentalSecurity:
+            return await getRealEnvironmentalSecurityComponent()
+        case .timeBasedRisk:
+            return await getRealTimeBasedRiskComponent()
+        case .bluetoothSecurity:
+            return getRealBluetoothComponent()
         }
-
-        return SecurityComponent(
-            name: "Network Security",
-            score: score,
-            maxScore: maxScore,
-            icon: icon
-        )
     }
 
     // Simulate security refresh
@@ -327,7 +326,6 @@ class SecurityViewModel: ObservableObject {
         // Prevent too frequent refreshes
         let now = Date()
         if now.timeIntervalSince(lastRefreshTime) < refreshCooldown {
-            print("Refresh cooldown active, skipping refresh")
             return
         }
 
@@ -343,16 +341,16 @@ class SecurityViewModel: ObservableObject {
 
 
         // Only do location check if we haven't done one recently AND we have permission
-        if enhancedLocationContextDetector.hasLocationPermission && now.timeIntervalSince(enhancedLocationContextDetector.lastLocationUpdate) > 30.0 {
-            enhancedLocationContextDetector.permissionLocationSnapshot()
+        if environmentSecurityDetector.hasLocationPermission && now.timeIntervalSince(environmentSecurityDetector.lastLocationUpdate) > 30.0 {
+            environmentSecurityDetector.performLocationSnapshot()
+        }
 
-            // short wait for location update, but dont block too long
-            for _ in 0..<10 { // 1 second max
-                if !enhancedLocationContextDetector.isLocationRequestInProgress {
-                    break
-                }
-                try? await Task.sleep(for: .milliseconds(100))
+        // Short wait for location update
+        for _ in 0..<10 {
+            if !environmentSecurityDetector.isLocationRequestInProgress {
+                break
             }
+            try? await Task.sleep(for: .milliseconds(100))
         }
 
         // Update components
@@ -394,12 +392,12 @@ class SecurityViewModel: ObservableObject {
         deviceLockDetector.checkDeviceLockCapabilities()
 
         // Only do initial location check if we have permission
-        if enhancedLocationContextDetector.hasLocationPermission {
-            enhancedLocationContextDetector.permissionLocationSnapshot()
+        if environmentSecurityDetector.hasLocationPermission {
+            environmentSecurityDetector.performLocationSnapshot()
 
-            // Give location detection reasonable time, but dont block
-            for _ in 0..<15 { // 1.5 seconds max wait
-                if !enhancedLocationContextDetector.isLocationRequestInProgress {
+            // give location detection reasonable time
+            for _ in 0..<15 {
+                if !environmentSecurityDetector.isLocationRequestInProgress {
                     break
                 }
                 try? await Task.sleep(for: .milliseconds(100))
@@ -425,107 +423,102 @@ class SecurityViewModel: ObservableObject {
     }
 
     func updateNeedsAttentionComponents() {
-        var attentionSet: Set<String> = []
+        var attentionSet: Set<ComponentIdentifier> = []
 
         // Check iOS version component
         if iosVersionDetector.needsUserConfirmation() {
-            attentionSet.insert("iOS Version")
+            attentionSet.insert(.iosVersion)
         }
 
         if screenRecordingDetector.isScreenBeingCaptured {
-            attentionSet.insert("Screen Recording")
+            attentionSet.insert(.screenRecording)
         }
 
         // Check VPN Status
         if vpnDetector.needsUserConfirmation() {
-            attentionSet.insert("VPN Status")
+            attentionSet.insert(.vpnStatus)
         }
 
-        // Check network Security
-        if networkSecurityDetector.needsUserConfirmation() {
-            attentionSet.insert("Network Security")
-        }
-
-        if enhancedLocationContextDetector.needsUserContextSelection() {
-            attentionSet.insert("Location Context")
+        // Environmental Security check
+        if environmentSecurityDetector.needsUserConfirmation() {
+            attentionSet.insert(.environmentalSecurity)
         }
 
         if timeBasedRiskDetector.currentTimeRisk == .high {
-            attentionSet.insert("Time-based Risk")
+            attentionSet.insert(.timeBasedRisk)
         }
 
         if deviceLockDetector.needsUserConfirmation() {
-            attentionSet.insert("Device Lock Security")
+            attentionSet.insert(.deviceLock)
         }
 
         if bluetoothSecurityDetector.needsUserConfirmation() {
-            attentionSet.insert("Bluetooth Security")
+            attentionSet.insert(.bluetoothSecurity)
         }
 
         needsAttentionComponents = attentionSet
     }
 
-    func handleNetworkSecurityConfirmation(_ confirmed: Bool) {
-        if confirmed {
-            networkSecurityDetector.confirmedNetworkTrusted()
-        } else {
-            networkSecurityDetector.confirmedNetworkPublic()
-        }
-
-        Task {
-            let updatedNetworkComponent = await getRealNetworkSecurityComponent()
-            await MainActor.run {
-                // find and update the wifi component
-                if let index = realSituationalComponents.firstIndex(where: { $0.name == "Network Security "}) {
-                    realSituationalComponents[index] = updatedNetworkComponent
-                }
-
-                // Recalculate situational score
-                let totalSituationalScore = realSituationalComponents.reduce(0) { $0 + $1.score }
-                self.situationalScore = Double(totalSituationalScore)
-
-                // Update attention component
-                updateNeedsAttentionComponents()
-            }
-        }
-    }
-
     func handleComponentConfirmation(component: SecurityComponent, confirmed: Bool) {
-        switch component.name {
-        case "iOS Version":
+        switch component.identifier {
+        case .iosVersion:
             if confirmed {
-                iosVersionDetector.confirmlatestVersion()
+                iosVersionDetector.confirmLatestVersion()
             } else {
                 iosVersionDetector.confirmUpdateAvailable()
             }
-        case "VPN Status":
+            updateSingleComponent(identifier: .iosVersion)
+
+        case .vpnStatus:
             if confirmed {
                 vpnDetector.confirmVPNActive()
             } else {
                 vpnDetector.confirmNoVPN()
             }
-        case "Network Security":
-            handleNetworkSecurityConfirmation(confirmed)
-            return
+            updateSingleComponent(identifier: .vpnStatus)
 
-        case "Location Context":
-            print("Location context confirmed - refreshing components")
-            break
+        case .environmentalSecurity:
+            updateSingleComponent(identifier: .environmentalSecurity)
 
-        case "Device Lock Security":
-            // Device Lock has custom confirmation flow, just refresh
-            break
+        case .deviceLock:
+            updateSingleComponent(identifier: .deviceLock)
 
-        case "Bluetooth Security":
-            // this will be handled by custom sheet
-            break
+        case .bluetoothSecurity:
+            updateSingleComponent(identifier: .bluetoothSecurity)
 
         default:
             break
         }
-        // update the attention components and refresh scores
+    }
+
+    func updateSingleComponent(identifier: ComponentIdentifier) {
         Task {
-            await refreshComponentsAfterConfirmation()
+
+            let updatedComponent = await getSingleUpdatedComponent(identifier: identifier)
+
+            await MainActor.run {
+                if identifier.isDeviceComponent {
+                    if let index = realDeviceComponents.firstIndex(where: { $0.identifier == identifier }) {
+                        realDeviceComponents[index] = updatedComponent
+                    }
+
+                    // recalculate only device score
+                    let totalDeviceScore = realDeviceComponents.reduce(0) { $0 + $1.score }
+                    withAnimation(.easeInOut(duration: 0.8)) {
+                        self.deviceScore = Double(totalDeviceScore)
+                    }
+                } else {
+                    if let index = realSituationalComponents.firstIndex(where: { $0.identifier == identifier }) {
+                        realSituationalComponents[index] = updatedComponent
+                    }
+                    // recalculate only situational score
+                    let totalSituationalScore = realSituationalComponents.reduce(0) { $0 + $1.score }
+                    withAnimation(.easeInOut(duration: 0.8)) {
+                        self.situationalScore = Double(totalSituationalScore)
+                    }
+                }
+                updateNeedsAttentionComponents()
+            }
         }
     }
 
@@ -535,13 +528,6 @@ class SecurityViewModel: ObservableObject {
 
         if !realComponentsLoaded {
             Task {
-                // set up location permissions first if needed
-                if enhancedLocationContextDetector.locationPermissionStatus == .notDetermined {
-                    enhancedLocationContextDetector.requestLocationPermission()
-
-                    // Get permission request time to complete
-                    try? await Task.sleep(for: .milliseconds(500))
-                }
                 await loadRealComponents()
 
                 // Trigger animation after components are loaded
@@ -569,6 +555,7 @@ class SecurityViewModel: ObservableObject {
         async let iOSVersionComponent = getRealIOSVersionComponent()
         async let vpnComponent = getRealVPNComponent()
         async let deviceLockComponent = getRealDeviceLockComponent()
+
         return await [
             vpnComponent,
             iOSVersionComponent,
@@ -578,51 +565,15 @@ class SecurityViewModel: ObservableObject {
     }
 
     private func loadSituationComponents() async -> [SecurityComponent] {
-        async let networkSecurityComponent = getRealNetworkSecurityComponent()
-        async let enhancedLocationContextComponent = getRealLocationComponent()
+        async let environmentalComponent = getRealEnvironmentalSecurityComponent()
         async let timeBasedRiskComponent = getRealTimeBasedRiskComponent()
         async let bluetoothComponent = getRealBluetoothComponent()
 
         return await [
-            networkSecurityComponent,
-            enhancedLocationContextComponent,
+            environmentalComponent,
             timeBasedRiskComponent,
             bluetoothComponent
         ]
-
-    }
-
-    func refreshComponentsAfterConfirmation() async {
-        // Reload components
-        let updateDeviceComponents = await loadDeviceComponents()
-        let updateSituationComponents = await loadSituationComponents()
-
-        await MainActor.run {
-            // Update device components
-            for component in updateDeviceComponents {
-                if let existingIndex = realDeviceComponents.firstIndex(where: { $0.name == component.name }) {
-                    realDeviceComponents[existingIndex] = component
-                }
-            }
-
-            for component in updateSituationComponents {
-                if let existingIndex = realSituationalComponents.firstIndex(where: { $0.name == component.name }) {
-                    realSituationalComponents[existingIndex] = component
-                }
-            }
-
-            // Recalculate scores with animation
-            let totalDeviceScore = realDeviceComponents.reduce(0) { $0 + $1.score }
-            let totalSituationScore = realSituationalComponents.reduce(0) { $0 + $1.score }
-
-            withAnimation(.easeInOut(duration: 0.8)) {
-                self.deviceScore = Double(totalDeviceScore)
-                self.situationalScore = Double(totalSituationScore)
-            }
-
-            // Update attention components
-            updateNeedsAttentionComponents()
-        }
     }
 
 }

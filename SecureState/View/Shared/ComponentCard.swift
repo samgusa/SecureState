@@ -12,10 +12,13 @@ struct ComponentCard: View {
     let needsAttention: Bool
     let onConfirm: (Bool) -> Void
     let networkName: String
-    let locationDetector: EnhancedLocationContextDetector?
     let deviceLockDetector: DeviceLockSecurityDetector?
     let bluetoothDetector: EnhancedBluetoothSecurityDetector?
     let environmentalDetector: EnvironmentalSecurityDetector?
+    let vpnDetector: VPNStatusDetector?
+    let screenRecordingDetector: ScreenRecordingDetector?
+    let iosVersionDetector: iOSVersionDetector?
+    let timeBasedDetector: TimeBasedRiskDetector?
 
     @State private var pulseAnimation: Bool = false
     @State private var showConfirmationSheet: Bool = false
@@ -79,8 +82,7 @@ struct ComponentCard: View {
         } content: {
             let config = ComponentConfiguration.create(
                 for: component,
-                networkName: networkName,
-                locationDetector: locationDetector
+                networkName: networkName
             )
 
             ComponentConfirmationSheet(
@@ -93,11 +95,14 @@ struct ComponentCard: View {
                 onDismiss: {
                     showConfirmationSheet = false
                 },
-                locationDetector: locationDetector,
                 networkName: networkName,
                 deviceLockDetector: deviceLockDetector,
                 bluetoothDetector: bluetoothDetector,
-                environmentDetector: environmentalDetector
+                environmentDetector: environmentalDetector,
+                vpnDetector: vpnDetector,
+                screenRecordingDetector: screenRecordingDetector,
+                iosVersionDetector: iosVersionDetector,
+                timeBasedDetector: timeBasedDetector
             )
         }
     }
@@ -106,7 +111,7 @@ struct ComponentCard: View {
 #Preview {
     ComponentCard(
         component: SecurityComponent(
-            name: "Wifi",
+            identifier: .iosVersion,
             score: 18,
             maxScore: 20,
             icon: "wifi"
@@ -114,39 +119,48 @@ struct ComponentCard: View {
         needsAttention: false,
         onConfirm: { _ in },
         networkName: "Network 2",
-        locationDetector: EnhancedLocationContextDetector(),
         deviceLockDetector: DeviceLockSecurityDetector(),
         bluetoothDetector: EnhancedBluetoothSecurityDetector(),
-        environmentalDetector: EnvironmentalSecurityDetector()
+        environmentalDetector: EnvironmentalSecurityDetector(),
+        vpnDetector: VPNStatusDetector(),
+        screenRecordingDetector: ScreenRecordingDetector(),
+        iosVersionDetector: iOSVersionDetector(),
+        timeBasedDetector: TimeBasedRiskDetector()
     )
     ComponentCard(
         component: SecurityComponent(
-            name: "Wifi",
+            identifier: .bluetoothSecurity,
             score: 15,
             maxScore: 20,
-            icon: "wifi"
+            icon: "bluetooth"
         ),
         needsAttention: true,
         onConfirm: { _ in },
         networkName: "Network 2",
-        locationDetector: EnhancedLocationContextDetector(),
         deviceLockDetector: DeviceLockSecurityDetector(),
         bluetoothDetector: EnhancedBluetoothSecurityDetector(),
-        environmentalDetector: EnvironmentalSecurityDetector()
+        environmentalDetector: EnvironmentalSecurityDetector(),
+        vpnDetector: VPNStatusDetector(),
+        screenRecordingDetector: ScreenRecordingDetector(),
+        iosVersionDetector: iOSVersionDetector(),
+        timeBasedDetector: TimeBasedRiskDetector()
     )
     ComponentCard(
         component: SecurityComponent(
-            name: "Wifi",
+            identifier: .deviceLock,
             score: 2,
             maxScore: 20,
-            icon: "wifi"
+            icon: "lock"
         ),
         needsAttention: true,
         onConfirm: { _ in },
         networkName: "Network 2",
-        locationDetector: EnhancedLocationContextDetector(),
         deviceLockDetector: DeviceLockSecurityDetector(),
         bluetoothDetector: EnhancedBluetoothSecurityDetector(),
-        environmentalDetector: EnvironmentalSecurityDetector()
+        environmentalDetector: EnvironmentalSecurityDetector(),
+        vpnDetector: VPNStatusDetector(),
+        screenRecordingDetector: ScreenRecordingDetector(),
+        iosVersionDetector: iOSVersionDetector(),
+        timeBasedDetector: TimeBasedRiskDetector()
     )
 }

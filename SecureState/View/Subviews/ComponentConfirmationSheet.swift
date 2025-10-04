@@ -16,11 +16,14 @@ struct ComponentConfirmationSheet: View {
     let onDismiss: () -> Void
 
     // Location-specific properties
-    let locationDetector: EnhancedLocationContextDetector?
     let networkName: String?
     let deviceLockDetector: DeviceLockSecurityDetector?
     let bluetoothDetector: EnhancedBluetoothSecurityDetector?
     let environmentDetector: EnvironmentalSecurityDetector?
+    let vpnDetector: VPNStatusDetector?
+    let screenRecordingDetector: ScreenRecordingDetector?
+    let iosVersionDetector: iOSVersionDetector?
+    let timeBasedDetector: TimeBasedRiskDetector?
 
     @State private var showPreciseLocation = false
     @State private var mapRegion = MKCoordinateRegion()
@@ -57,11 +60,6 @@ struct ComponentConfirmationSheet: View {
                     }
 
                     Spacer(minLength: 20)
-
-                    if selectedMode == .assessment && config.type != .complex {
-                        // Action buttons
-                        actionButtons
-                    }
                 }
                 .padding()
             }
@@ -179,11 +177,7 @@ struct ComponentConfirmationSheet: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            switch config.type {
-            case .simple: simpleConfirmationContent
-            case .contextual: contextualConfirmationContent
-            case .complex: complexConfirmationContent
-            }
+            complexConfirmationContent
         }
     }
 
@@ -233,81 +227,24 @@ struct ComponentConfirmationSheet: View {
         }
     }
 
-    // MARK: - Simple Confirmation Content
-    private var simpleConfirmationContent: some View {
-        VStack(spacing: 16) {
-            Text(config.question)
-                .font(.headline)
-                .fontWeight(.medium)
-                .multilineTextAlignment(.center)
-
-            if let networkContext = getNetworkContext() {
-                contextCard(networkContext)
-            }
-        }
-    }
-
-    // MARK: - Contextual Confirmation Content
-    private var contextualConfirmationContent: some View {
-        VStack(spacing: 20) {
-            Text(config.question)
-                .font(.headline)
-                .fontWeight(.medium)
-                .multilineTextAlignment(.center)
-
-            // DELETE
-        }
-    }
-
     // MARK: - Complex Confirmation Content
     private var complexConfirmationContent: some View {
         VStack(spacing: 20) {
-            if config.name == "Location Context" {
-                locationContextView
-            } else if config.name == "Device Lock Security" {
+            switch config.identifier {
+            case .screenRecording:
+                screenRecordingContextView
+            case .iosVersion:
+                iOSVersionContextView
+            case .vpnStatus:
+                vpnContextView
+            case .deviceLock:
                 deviceLockContextView
-            } else if config.name == "Bluetooth Security" {
+            case .environmentalSecurity:
+                environmentalSecurityContextView
+            case .timeBasedRisk:
+                timeContextView
+            case .bluetoothSecurity:
                 bluetoothSecurityContextView
-            } else {
-                // Fallback to contextual content
-                contextualConfirmationContent
-            }
-        }
-    }
-
-    // MARK: - Location Context View
-    private var locationContextView: some View {
-        VStack(spacing: 20) {
-            if let detector = locationDetector {
-                LocationDetectionStatusView(detector: detector)
-
-                if let snapshot = detector.currentLocationSnapshot {
-                    LocationMapView(
-                        snapshot: snapshot,
-                        showPreciseLocation: $showPreciseLocation,
-                        mapRegion: $mapRegion,
-                        hideLocationTimer: $hideLocationTimer
-                    )
-                }
-
-                LocationContextSelectionView(
-                    detector: detector,
-                    onSelection: { context in
-                        // Handle location context selection
-                        NotificationCenter.default.post(
-                            name: .locationContextSelected,
-                            object: context
-                        )
-
-                        onConfirm(true)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            onDismiss()
-                        }
-                    }
-                )
-            } else {
-                Text("Location detector not available")
-                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -356,6 +293,61 @@ struct ComponentConfirmationSheet: View {
         }
     }
 
+    // MARK: - VPN Context View
+    private var vpnContextView: some View {
+        VStack(spacing: 20) {
+            if let detector = vpnDetector {
+                VPNTrafficSimulatorView(
+                    detector: detector) { confirmed in
+                        onConfirm(confirmed)
+                        onDismiss()
+                    }
+            } else {
+                Text("VPN security detector not available")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // MARK: - Time Context View
+    private var timeContextView: some View {
+        VStack(spacing: 20) {
+            if let detector = timeBasedDetector {
+                CicadianSecurityClockView(detector: detector)
+            } else {
+                Text("Time-based security detector not available")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // MARK: - Screen Recording Context View
+    private var screenRecordingContextView: some View {
+        VStack(spacing: 20) {
+            if let detector = screenRecordingDetector {
+                ScreenRecordingStatusView(detector: detector)
+            } else {
+                Text("Screen Recording security detector not available")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // MARK: - iOS Version Context View
+    private var iOSVersionContextView: some View {
+        VStack(spacing: 20) {
+            if let detector = iosVersionDetector {
+                iOSVersionFreshnessView(detector: detector) { confirmed in
+                    onConfirm(confirmed)
+                    onDismiss()
+                }
+            } else {
+                Text("iOS Version security detector not available")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
     // MARK: Environmental Security View
     private var environmentalSecurityContextView: some View {
         VStack(spacing: 20) {
@@ -376,115 +368,35 @@ struct ComponentConfirmationSheet: View {
             }
         }
     }
-
-    // MARK: - Action Buttons
-    private var actionButtons: some View {
-        VStack(spacing: 12) {
-            // Only show standard Yes/No buttons for simple and contextual types
-            if config.type != .complex {
-                Button(config.positiveText) {
-                    onConfirm(true)
-                    onDismiss()
-                }
-                .buttonStyle(PrimaryButtonStyle())
-
-                Button(config.negativeText) {
-                    onConfirm(false)
-                    onDismiss()
-                }
-                .buttonStyle(SecondaryButtonStyle())
-            }
-        }
-    }
-
-    // MARK: - Helper Views
-    private func contextCard(_ text: String) -> some View {
-        Text(text)
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private func networkTypeCard(_ title: String, _ description: String, _ icon: String, _ color: Color) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundStyle(color)
-                .font(.title3)
-                .frame(width: 24)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-
-                Text(description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private func infoBox(_ text: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "info.circle.fill")
-                .foregroundStyle(.blue)
-
-            Text(text)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding()
-        .background(Color.blue.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    // MARK: - Helper Methods
-    private func getNetworkContext() -> String? {
-        switch config.name {
-        case "VPN Status":
-            return "Check Settings > VPN & Device Management > VPN for third-party VPNs, or Settings > Privacy & Security > iCloud Private Relay for Apple's service."
-        default:
-            return nil
-        }
-    }
 }
 
 #Preview {
-    ComponentConfirmationSheet(component:
-                                SecurityComponent(
-                                    name: "Test",
-                                    score: 15,
-                                    maxScore: 20,
-                                    icon: "shield"
-                                ),
-                               config: ComponentConfiguration(
-                                name: "iOS Version",
-                                type: .simple,
-                                icon: "wifi",
-                                title: "iOS Version Status",
-                                description: "Keeping iOS updated is crucial for security.",
-                                question: "Is your iOS version up to date?",
-                                positiveText: "Yes, I'm up to date",
-                                negativeText: "No, update available"
-                               ),
-                               onConfirm: { _ in
-
-    },
-                               onDismiss: {
-
-    },
-                               locationDetector: nil,
-                               networkName: "",
-                               deviceLockDetector: .init(),
-                               bluetoothDetector: .init(),
-                               environmentDetector: EnvironmentalSecurityDetector()
+    ComponentConfirmationSheet(
+        component: SecurityComponent(
+            identifier: .screenRecording,
+            score: 15,
+            maxScore: 20,
+            icon: "shield"
+        ),
+        config: ComponentConfiguration(
+            identifier: .iosVersion,
+            icon: "wifi",
+            title: "iOS Version Status",
+            description: "Keeping iOS updated is crucial for security.",
+            question: "Is your iOS version up to date?",
+            positiveText: "Yes, I'm up to date",
+            negativeText: "No, update available"
+           ),
+        onConfirm: { _ in },
+        onDismiss: {},
+        networkName: "",
+        deviceLockDetector: DeviceLockSecurityDetector(),
+        bluetoothDetector: EnhancedBluetoothSecurityDetector(),
+        environmentDetector: EnvironmentalSecurityDetector(),
+        vpnDetector: VPNStatusDetector(),
+        screenRecordingDetector: ScreenRecordingDetector(),
+        iosVersionDetector: iOSVersionDetector(),
+        timeBasedDetector: TimeBasedRiskDetector()
     )
 }
 

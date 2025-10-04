@@ -92,12 +92,10 @@ struct LargeEnvironmentalSecurityCard: View {
             }
             .sheet(isPresented: $showDetailSheet) {
                 if let detector = environmentDetector {
-                    // UPDATE
                     let config = ComponentConfiguration.create(
                         for: component,
                         networkName: detector.currentNetworkName,
-                        locationDetector: nil //,
-                        //environmentDetector: detector
+                        environmentalDetector: detector
                     )
 
                     ComponentConfirmationSheet(
@@ -108,12 +106,14 @@ struct LargeEnvironmentalSecurityCard: View {
                             showDetailSheet = false
                         },
                         onDismiss: { showDetailSheet = false },
-                        locationDetector: nil,
                         networkName: detector.currentNetworkName,
                         deviceLockDetector: nil,
                         bluetoothDetector: nil,
-                        // FIX
-                        environmentDetector: EnvironmentalSecurityDetector()
+                        environmentDetector: detector,
+                        vpnDetector: nil,
+                        screenRecordingDetector: nil,
+                        iosVersionDetector: nil,
+                        timeBasedDetector: nil
                     )
                 }
             }
@@ -124,7 +124,7 @@ struct LargeEnvironmentalSecurityCard: View {
 #Preview {
     LargeEnvironmentalSecurityCard(
         component: SecurityComponent(
-            name: "Environmental Section",
+            identifier: .environmentalSecurity,
             score: 23,
             maxScore: 25,
             icon: "shield"

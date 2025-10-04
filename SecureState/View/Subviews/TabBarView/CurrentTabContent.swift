@@ -13,7 +13,7 @@ struct CurrentTabContent: View {
     @Binding var situationalScore: Double
     @Binding var selectedTab: TabAction
     @Binding var selectedComponentForConfirmation: SecurityComponent?
-    @Binding var needsAttentionComponents: Set<String>
+    @Binding var needsAttentionComponents: Set<ComponentIdentifier>
     let maxDeviceScore: Double
     var devicePercentage: Double
     let maxSituationalScore: Double
@@ -23,7 +23,11 @@ struct CurrentTabContent: View {
     let networkName: String
     let deviceLockDetector: DeviceLockSecurityDetector
     let bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector
-    let enhancedLocationContextDetector: EnhancedLocationContextDetector
+    let environmentalSecurityDetector: EnvironmentalSecurityDetector
+    let vpnDetector: VPNStatusDetector
+    let screenRecordingDetector: ScreenRecordingDetector
+    let iosVersionDetector: iOSVersionDetector
+    let timeBasedDetector: TimeBasedRiskDetector
     let realDeviceComponents: [SecurityComponent]
     let realSituationalComponents: [SecurityComponent]
 
@@ -39,7 +43,11 @@ struct CurrentTabContent: View {
                     networkName: networkName,
                     deviceLockDetector: deviceLockDetector,
                     bluetoothSecurityDetector: bluetoothSecurityDetector,
-                    enhancedLocationContextDetector: enhancedLocationContextDetector,
+                    environmentalSecurityDetector: environmentalSecurityDetector,
+                    vpnDetector: vpnDetector,
+                    screenRecordingDetector: screenRecordingDetector,
+                    iosVersionDetector: iosVersionDetector,
+                    timeBasedDetector: timeBasedDetector,
                     realDeviceComponents: realDeviceComponents,
                     realSituationalComponents: realSituationalComponents
                 )
@@ -74,7 +82,7 @@ struct CurrentTabContent: View {
         selectedTab: .constant(.overview),
         selectedComponentForConfirmation: .constant(
             SecurityComponent(
-                name: "Password Manager",
+                identifier: .vpnStatus,
                 score: 10,
                 maxScore: 10,
                 icon: "key"
@@ -91,18 +99,21 @@ struct CurrentTabContent: View {
         networkName: "",
         deviceLockDetector: DeviceLockSecurityDetector(),
         bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector(),
-        enhancedLocationContextDetector: .init(),
+        environmentalSecurityDetector: EnvironmentalSecurityDetector(),
+        vpnDetector: VPNStatusDetector(),
+        screenRecordingDetector: ScreenRecordingDetector(),
+        iosVersionDetector: iOSVersionDetector(),
+        timeBasedDetector: TimeBasedRiskDetector(),
         realDeviceComponents: [
-            SecurityComponent(name: "VPN Status", score: 10, maxScore: 20, icon: "shield"),
-            SecurityComponent(name: "iOS Version", score: 8, maxScore: 15, icon: "gear"),
-            SecurityComponent(name: "Network Type", score: 6, maxScore: 15, icon: "wifi"),
-            SecurityComponent(name: "Screen Recording", score: 5, maxScore: 5, icon: "eye.slash")
+            SecurityComponent(identifier: .vpnStatus, score: 10, maxScore: 20, icon: "shield"),
+            SecurityComponent(identifier: .iosVersion, score: 8, maxScore: 15, icon: "gear"),
+            SecurityComponent(identifier: .environmentalSecurity, score: 6, maxScore: 15, icon: "wifi"),
+            SecurityComponent(identifier: .screenRecording, score: 5, maxScore: 5, icon: "eye.slash")
         ],
         realSituationalComponents: [
-            SecurityComponent(name: "Public Wi-Fi", score: 10, maxScore: 20, icon: "wifi.exclamationmark"),
-            SecurityComponent(name: "Location Context", score: 8, maxScore: 15, icon: "location"),
-            SecurityComponent(name: "Time Risk", score: 5, maxScore: 5, icon: "clock"),
-            SecurityComponent(name: "Background Activity", score: 5, maxScore: 5, icon: "app.badge")
+            SecurityComponent(identifier: .deviceLock, score: 10, maxScore: 20, icon: "wifi.exclamationmark"),
+            SecurityComponent(identifier: .environmentalSecurity, score: 8, maxScore: 15, icon: "location"),
+            SecurityComponent(identifier: .timeBasedRisk, score: 5, maxScore: 5, icon: "clock")
         ]
     )
 }

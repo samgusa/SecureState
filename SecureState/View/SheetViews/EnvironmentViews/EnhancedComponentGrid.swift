@@ -10,13 +10,16 @@ import SwiftUI
 struct EnhancedComponentGrid: View {
     let deviceComponents: [SecurityComponent]
     let situationComponents: [SecurityComponent]
-    let needsAttentionComponents: Set<String>
+    let needsAttentionComponents: Set<ComponentIdentifier>
     let onComponentTap: (SecurityComponent, Bool) -> Void
     let networkName: String
-    let locationDetector: EnhancedLocationContextDetector?
     let deviceLockDetector: DeviceLockSecurityDetector?
     let bluetoothDetector: EnhancedBluetoothSecurityDetector?
     let environmentDetector: EnvironmentalSecurityDetector?
+    let vpnDetector: VPNStatusDetector?
+    let screenRecordingDetector: ScreenRecordingDetector?
+    let iosVersionDetector: iOSVersionDetector?
+    let timeBasedDetector: TimeBasedRiskDetector?
 
 
     var body: some View {
@@ -26,16 +29,18 @@ struct EnhancedComponentGrid: View {
                     ForEach(deviceComponents, id: \.name) { component in
                         ComponentCard(
                             component: component,
-                            needsAttention: needsAttentionComponents.contains(component.name),
+                            needsAttention: needsAttentionComponents.contains(component.identifier),
                             onConfirm: { confirmed in
                                 onComponentTap(component, true)
                             },
-                            // CHANGE Remove network type
                             networkName: networkName,
-                            locationDetector: locationDetector,
                             deviceLockDetector: deviceLockDetector,
                             bluetoothDetector: bluetoothDetector,
-                            environmentalDetector: environmentDetector
+                            environmentalDetector: environmentDetector,
+                            vpnDetector: vpnDetector,
+                            screenRecordingDetector: screenRecordingDetector,
+                            iosVersionDetector: iosVersionDetector,
+                            timeBasedDetector: timeBasedDetector
                         )
                     }
                 }
@@ -44,10 +49,10 @@ struct EnhancedComponentGrid: View {
             if !situationComponents.isEmpty {
                 VStack(spacing: 12) {
                     // Find Environment Security Component
-                    if let environmentalComponent = situationComponents.first(where: { $0.name == "Environmental Security" }) {
+                    if let environmentalComponent = situationComponents.first(where: { $0.identifier == .environmentalSecurity }) {
                         LargeEnvironmentalSecurityCard(
                             component: environmentalComponent,
-                            needsAttention: needsAttentionComponents.contains(environmentalComponent.name),
+                            needsAttention: needsAttentionComponents.contains(environmentalComponent.identifier),
                             environmentDetector: environmentDetector,
                             onTap: {
                                 onComponentTap(environmentalComponent, false)
@@ -56,21 +61,24 @@ struct EnhancedComponentGrid: View {
                     }
 
                     // Other situational components in standard 2x2 grid
-                    let otherSituationalComponents = situationComponents.filter { $0.name != "Environmental Security" }
+                    let otherSituationalComponents = situationComponents.filter { $0.identifier != .environmentalSecurity }
                     if !otherSituationalComponents.isEmpty {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                            ForEach(otherSituationalComponents, id: \.name) { component in
+                            ForEach(otherSituationalComponents, id: \.identifier) { component in
                                 ComponentCard(
                                     component: component,
-                                    needsAttention: needsAttentionComponents.contains(component.name),
+                                    needsAttention: needsAttentionComponents.contains(component.identifier),
                                     onConfirm: { confirmed in
                                         onComponentTap(component, false)
                                     },
                                     networkName: networkName,
-                                    locationDetector: locationDetector,
                                     deviceLockDetector: deviceLockDetector,
                                     bluetoothDetector: bluetoothDetector,
-                                    environmentalDetector: environmentDetector
+                                    environmentalDetector: environmentDetector,
+                                    vpnDetector: vpnDetector,
+                                    screenRecordingDetector: screenRecordingDetector,
+                                    iosVersionDetector: iosVersionDetector,
+                                    timeBasedDetector: timeBasedDetector
                                 )
                             }
                         }
@@ -89,9 +97,12 @@ struct EnhancedComponentGrid: View {
         onComponentTap: { _, _ in
         },
         networkName: "",
-        locationDetector: EnhancedLocationContextDetector(),
         deviceLockDetector: DeviceLockSecurityDetector(),
         bluetoothDetector: EnhancedBluetoothSecurityDetector(),
-        environmentDetector: EnvironmentalSecurityDetector()
+        environmentDetector: EnvironmentalSecurityDetector(),
+        vpnDetector: VPNStatusDetector(),
+        screenRecordingDetector: ScreenRecordingDetector(),
+        iosVersionDetector: iOSVersionDetector(),
+        timeBasedDetector: TimeBasedRiskDetector()
     )
 }

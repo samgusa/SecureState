@@ -9,8 +9,8 @@ import Foundation
 import SwiftUI
 
 struct ComponentConfiguration {
+    let identifier: ComponentIdentifier
     let name: String
-    let type: ComponentType
     let icon: String
     let title: String
     let description: String
@@ -19,9 +19,9 @@ struct ComponentConfiguration {
     let negativeText: String
     let detailContent: AnyView?
 
-    init(name: String, type: ComponentType, icon: String, title: String, description: String, question: String, positiveText: String, negativeText: String, detailContent: AnyView? = nil) {
-        self.name = name
-        self.type = type
+    init(identifier: ComponentIdentifier, icon: String, title: String, description: String, question: String, positiveText: String, negativeText: String, detailContent: AnyView? = nil) {
+        self.identifier = identifier
+        self.name = identifier.displayName
         self.icon = icon
         self.title = title
         self.description = description
@@ -34,64 +34,46 @@ struct ComponentConfiguration {
 
 extension ComponentConfiguration {
     static func create(for component: SecurityComponent,
-                       networkType: String? = nil,
-                       networkName: String? = nil,
-                       locationDetector: EnhancedLocationContextDetector? = nil,
+                      networkName: String? = nil,
                        environmentalDetector: EnvironmentalSecurityDetector? = nil) -> ComponentConfiguration {
 
-        switch component.name {
-        case "iOS Version":
+        switch component.identifier {
+        case .environmentalSecurity:
             return ComponentConfiguration(
-                name: "iOS Version",
-                type: .contextual,
+                identifier: .environmentalSecurity,
                 icon: component.icon,
-                title: "iOS Version Status",
-                description: "Keeping iOS updated is crucial for security.",
-                question: "Is your iOS version up to date?",
-                positiveText: "Yes, I'm up to date",
-                negativeText: "No, update available"
-            )
-
-        case "VPN Status":
-            return ComponentConfiguration(
-                name: "VPN Status",
-                type: .contextual,
-                icon: component.icon,
-                title: "VPN Status",
-                description: "A VPN encrypts your connection and protects your privacy.",
-                question: "Are you currently using a VPN?",
-                positiveText: "Yes, using VPN",
-                negativeText: "No VPN active"
-            )
-
-        case "Network Security":
-            return ComponentConfiguration(
-                name: "Network Security",
-                type: .complex,
-                icon: component.icon,
-                title: "Network Security",
-                description: "Network security depends on who else can access your connection.",
-                question: "Are you sharing this network with strangers?",
-                positiveText: "No, it's private/trusted",
-                negativeText: "Yes, it's shared/public"
-            )
-
-        case "Location Context":
-            return ComponentConfiguration(
-                name: "Location Context",
-                type: .complex,
-                icon: component.icon,
-                title: "Location Security Context",
-                description: "Your location affects your security risk profile.",
-                question: "Select your current security context",
+                title: "Environmental Security Assessment",
+                description: "Assesses your overall exposure risk from both physical environment and network connection.",
+                question: "Let's evaluate your current environmental security",
                 positiveText: "",
                 negativeText: ""
             )
 
-        case "Device Lock Security":
+        case .iosVersion:
             return ComponentConfiguration(
-                name: "Device Lock Security",
-                type: .complex,
+                identifier: .iosVersion,
+                icon: component.icon,
+                title: "iOS Version",
+                description: "Track how current your iOS version is and understand security implications over time.",
+                question: "Check your iOS version currency",
+                positiveText: "Up to Date",
+                negativeText: "Update Available"
+            )
+
+        case .vpnStatus:
+            return ComponentConfiguration(
+                identifier: .vpnStatus,
+                icon: component.icon,
+                title: "VPN Traffic Protection",
+                description: "See how VPNs protect your data by encrypting traffic between your device and servers.",
+                question: "Experience the difference VPN makes for your security",
+                positiveText: "VPN Active",
+                negativeText: "No VPN"
+            )
+
+        case .deviceLock:
+            return  ComponentConfiguration(
+                identifier: .deviceLock,
                 icon: component.icon,
                 title: "Device Lock Security",
                 description: "Your device lock is the first line of defense against physical access.",
@@ -100,10 +82,20 @@ extension ComponentConfiguration {
                 negativeText: ""
             )
 
-        case "Bluetooth Security":
+        case .screenRecording:
             return ComponentConfiguration(
-                name: "Bluetooth Security",
-                type: .complex,
+                identifier: .screenRecording,
+                icon: component.icon,
+                title: "Screen Recording Protection",
+                description: "Real-time detection of screen recording to prevent sensitive data exposure.",
+                question: "Test and understand screen recording detection",
+                positiveText: "",
+                negativeText: ""
+            )
+
+        case .bluetoothSecurity:
+            return ComponentConfiguration(
+                identifier: .bluetoothSecurity,
                 icon: component.icon,
                 title: "Bluetooth Environment Safety",
                 description: "Assess the security risk from nearby Bluetooth devices in your current environment.",
@@ -112,24 +104,22 @@ extension ComponentConfiguration {
                 negativeText: ""
             )
 
-            // Add other components...
-        default:
+        case .timeBasedRisk:
             return ComponentConfiguration(
-                name: component.name,
-                type: .contextual,
+                identifier: .timeBasedRisk,
                 icon: component.icon,
                 title: component.name,
-                description: "This component helps protect your device.",
-                question: "Please confirm status",
-                positiveText: "Yes",
-                negativeText: "No"
+                description: "",
+                question: "",
+                positiveText: "",
+                negativeText: ""
             )
         }
     }
 
     var educationalContent: ComponentEducationContent {
-        switch name {
-        case "iOS Version":
+        switch identifier {
+        case .iosVersion:
             return ComponentEducationContent(
                 explanation: "Keeping iOS updated is crucial for security because Apple regularly patches vulnerabilities that attackers could exploit to compromise your device.",
                 howToCheck: "Settings > General > Software Update",
@@ -145,41 +135,52 @@ extension ComponentConfiguration {
                     "Personal data could be accessed through unpatched security holes"
                 ]
             )
-        case "VPN Status":
+
+        case .vpnStatus:
             return ComponentEducationContent(
-                explanation: "A VPN (Virtual Private Network) encrypts your internet traffic and routes it through secure servers, protecting your data from being intercepted.",
-                howToCheck: "Settings > VPN & Device Management > VPN, or Settings > Privacy & Security > iCloud Private Relay",
-                whyItMatters: "Without a VPN, your internet traffic can be monitored by others on the same network, especially on public Wi-Fi.",
+                explanation: "A VPN (Virtual Private Network) creates an encrypted tunnel between your device and the internet. This protects your browsing activity and sensitive data from being intercepted by others on the same network, your internet provider, or malicious actors.",
+                howToCheck: """
+                        • Open Settings > General > VPN & Device Management > VPN to see if a VPN service is installed and active.
+                        • For Apple’s built-in option, check Settings > [Your Name] > iCloud > Private Relay.
+                        """,
+                whyItMatters: "Without VPN protection, your internet traffic can be monitored on public Wi-Fi, logged by internet providers, or intercepted by attackers. A VPN adds a strong layer of privacy and security.",
                 improvementSteps: [
-                    "Choose a reputable VPN service (NordVPN, ExpressVPN, etc.)",
-                    "Download the VPN app and follow setup instructions",
-                    "Or enable iCloud Private Relay: Settings > [Your Name] > iCloud > Private Relay"
+                    "Choose a reputable VPN provider (e.g., NordVPN, ExpressVPN, ProtonVPN, Surfshark).",
+                    "Install the VPN app from the App Store and sign in.",
+                    "Enable the VPN in Settings > General > VPN & Device Management.",
+                    "If you prefer Apple’s solution, turn on iCloud Private Relay in Settings > [Your Name] > iCloud.",
+                    "Always connect to a VPN before using public Wi-Fi.",
+                    "Verify the VPN is active by checking your IP address online."
                 ],
                 riskScenarios: [
-                    "On public Wi-Fi, others could see what websites you visit",
-                    "Your internet provider could monitor your browsing habits",
-                    "Attackers could intercept sensitive data like passwords"
+                    "Using public Wi-Fi at airports, hotels, or coffee shops without a VPN leaves your traffic exposed.",
+                    "Internet providers may track and log your browsing activity.",
+                    "Hackers on shared networks can intercept unencrypted data (like logins or financial info).",
+                    "Governments, corporations, or schools could monitor your online activity.",
+                    "Your approximate location may be revealed through your IP address if no VPN or Private Relay is active."
                 ]
             )
 
-        case "Screen Recording":
+        case .screenRecording:
             return ComponentEducationContent(
-                explanation: "Screen recording detection alerts you when your screen content is being captured, which could compromise sensitive information.",
-                howToCheck: "Look for recording indicators in Control Center or check if any apps have screen recording permission",
-                whyItMatters: "Screen recording can capture passwords, banking information, private messages, and other sensitive data without your knowledge.",
+                explanation: "Screen recording detection alerts you when your screen content is being captured. iOS allows screen recording as a system feature - apps can detect it but cannot prevent it.",
+                howToCheck: "Look for the recording indicator in Control Center, or check the orange dot/recording indicator at the top of your screen",
+                whyItMatters: "Screen recording can capture passwords, banking information, private messages, and other sensitive data. Being aware when recording is active helps you avoid exposing sensitive information.",
                 improvementSteps: [
-                    "Stop any active screen recordings",
-                    "Check Control Center for recording indicators",
-                    "Review app permissions: Settings > Privacy & Security > Screen & System Audio Recording"
+                    "Stop any active screen recordings before handling sensitive data",
+                    "Check Control Center for the recording indicator (circle with dot)",
+                    "Look for the orange recording indicator at the top of your screen",
+                    "Be cautious about which apps you grant screen recording permission to"
                 ],
                 riskScenarios: [
                     "Malicious apps could record your banking sessions",
-                    "Screen sharing software might capture sensitive information",
-                    "Your passwords could be visible in recorded content"
+                    "Screen sharing software might inadvertently capture sensitive information",
+                    "Your passwords could be visible in recorded content",
+                    "Private conversations could be captured without your awareness"
                 ]
             )
 
-        case "Environmental Security":
+        case .environmentalSecurity:
             return ComponentEducationContent(
                 explanation: """
                 Environmental security combines your physical location safety with network connection security to give you a complete risk assessment. 
@@ -189,11 +190,12 @@ extension ComponentConfiguration {
                 The scoring system rewards secure combinations: private locations + trusted networks score highest, while public spaces + shared networks score lowest.
                 """,
 
+                // DONE
                 howToCheck: """
                 Network Security:
                 • Cellular: Check signal strength in Control Center
                 • Wi-Fi: Settings > Wi-Fi to see current network
-                • VPN: Settings > VPN & Device Management or Privacy & Security > Private Relay
+                • VPN: Settings > General > VPN & Device Management > VPN > 
                 
                 Physical Environment:
                 • Look around for other people who might observe your screen
@@ -231,7 +233,7 @@ extension ComponentConfiguration {
                 ]
             )
 
-        case "Device Lock Security":
+        case .deviceLock:
             return ComponentEducationContent(
                 explanation: "Your device lock is the first line of defense against physical access to your personal information if your device is lost, stolen, or accessed by others.",
                 howToCheck: "Settings > Face ID & Passcode (or Touch ID & Passcode) and Settings > Display & Brightness > Auto-Lock",
@@ -248,8 +250,7 @@ extension ComponentConfiguration {
                     "Stored passwords and payment methods could be compromised"
                 ]
             )
-
-        case "Bluetooth Security":
+        case .bluetoothSecurity:
             return ComponentEducationContent(
                 explanation: "Bluetooth devices in your environment can indicate the security risk level of your current location and potential exposure to Bluetooth-based attacks.",
                 howToCheck: "Settings > Bluetooth shows paired devices, but many devices broadcast without being paired",
@@ -266,32 +267,25 @@ extension ComponentConfiguration {
                     "Crowded environments indicate higher overall security risk"
                 ]
             )
-
-        case "Time-based Risk":
+        case .timeBasedRisk:
             return ComponentEducationContent(
-                explanation: "Security risks increase during late night or early morning hours when fatigue can impair judgment and response to security threats.",
-                howToCheck: "Consider your current alertness level and the time of day",
-                whyItMatters: "Fatigue reduces your ability to notice security threats, make good decisions, and respond appropriately to suspicious activity.",
+                explanation: "Your cognitive alertness varies throughout the day, affecting your ability to recognize security threats and make good security decisions. Fatigue impairs judgment and reaction time to suspicious activity.",
+                howToCheck: "Consider your current alertness level and the time of day. Notice if you feel tired or mentally foggy.",
+                whyItMatters: "Security threats often exploit human error. When you're tired, you're more likely to click suspicious links, ignore security warnings, or make poor password choices.",
                 improvementSteps: [
-                    "Avoid important financial tasks when tired",
-                    "Be extra cautious with password entry during late hours",
-                    "Consider waiting until you're more alert for sensitive activities",
-                    "Use additional verification for important actions when tired"
+                    "Schedule important financial activities during peak alertness hours (8am-10pm)",
+                    "Be extra cautious with security decisions when tired",
+                    "Set up additional verification for late-night transactions",
+                    "Avoid clicking links in emails during low-alertness hours",
+                    "Consider waiting until morning for important account changes"
                 ],
                 riskScenarios: [
-                    "You might not notice suspicious activity when tired",
-                    "Poor judgment could lead to clicking malicious links",
-                    "Fatigue might cause you to ignore security warnings"
+                    "Late-night phishing emails are more likely to succeed",
+                    "Tired users may not notice suspicious website URLs",
+                    "Poor password choices when creating accounts while fatigued",
+                    "Ignoring browser security warnings due to reduced attention",
+                    "Social engineering attacks exploit decision fatigue"
                 ]
-            )
-
-        default:
-            return ComponentEducationContent(
-                explanation: "This component helps protect your device and data.",
-                howToCheck: "Check your device settings for related security options.",
-                whyItMatters: "Each security component contributes to your overall protection.",
-                improvementSteps: ["Review your security settings regularly"],
-                riskScenarios: ["Weak security can expose your personal information"]
             )
         }
     }
