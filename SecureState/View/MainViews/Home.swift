@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct Home: View {
-
+    @Environment(\.modelContext) private var modelContext
     @StateObject private var secureState = SecurityViewModel()
 
     var body: some View {
@@ -88,7 +89,12 @@ struct Home: View {
                                 iosVersionDetector: secureState.iosVersionDetector,
                                 timeBasedDetector: secureState.timeBasedRiskDetector,
                                 realDeviceComponents: secureState.realDeviceComponents,
-                                realSituationalComponents: secureState.realSituationalComponents
+                                realSituationalComponents: secureState.realSituationalComponents,
+                                loadRealComponents: {
+                                    Task {
+                                        await secureState.loadRealComponents()
+                                    }
+                                }
                             )
                             .id("content")
                             .padding(.bottom, 100)
@@ -124,15 +130,11 @@ struct Home: View {
             .navigationTitle("Secure State")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
+                secureState.modelContext = modelContext
                 secureState.setupInitialState()
             }
             .refreshable {
                 await secureState.performSecurityRefresh()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .locationContextSelected)) { _ in
-                Task {
-                    await secureState.performSecurityRefresh()
-                }
             }
         }
     }

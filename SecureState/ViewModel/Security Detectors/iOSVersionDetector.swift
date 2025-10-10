@@ -40,7 +40,7 @@ class iOSVersionDetector: ObservableObject {
     }
 
     // Auto-detecting scoring based on version patterns
-    private func calculateAutoScore() -> Int {
+    func calculateAutoScore() -> Int {
         let (major, _, _) = versionComponents
         let expectedVersion = getExpectedMajorVersion()
 
@@ -67,7 +67,7 @@ class iOSVersionDetector: ObservableObject {
         return score
     }
 
-    private func getExpectedMajorVersion() -> Int {
+    func getExpectedMajorVersion() -> Int {
         let calendar = Calendar.current
         let now = Date()
         let year = calendar.component(.year, from: now)

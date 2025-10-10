@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import SwiftData
 
 @MainActor
 class SecurityViewModel: ObservableObject {
@@ -48,6 +49,8 @@ class SecurityViewModel: ObservableObject {
     let timeBasedRiskDetector = TimeBasedRiskDetector()
     let bluetoothSecurityDetector = EnhancedBluetoothSecurityDetector()
     let environmentSecurityDetector = EnvironmentalSecurityDetector()
+
+    var modelContext: ModelContext?
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -385,6 +388,10 @@ class SecurityViewModel: ObservableObject {
     }
 
     func loadRealComponents() async {
+        await MainActor.run {
+            loadPersistedStatus()
+        }
+
         screenRecordingDetector.checkCurrentState()
         vpnDetector.checkVPNStatus()
         timeBasedRiskDetector.checkCurrentTime()
@@ -419,6 +426,120 @@ class SecurityViewModel: ObservableObject {
             self.realComponentsLoaded = true
 
             updateNeedsAttentionComponents()
+        }
+    }
+
+    func loadPersistedStatus() {
+        guard let modelContext = modelContext else { return }
+
+        // VPN
+        if let state = PersistenceManager.loadCompleteState(
+            identifier: .vpnStatus,
+            context: modelContext
+        ) {
+            vpnDetector.isUserConfirmedVPN = state.userConfirmed
+        }
+
+        // iOS Version
+        if let state = PersistenceManager.loadCompleteState(
+            identifier: .iosVersion,
+            context: modelContext
+        ) {
+            iosVersionDetector.isUserConfirmedLatest = state.userConfirmed
+            iosVersionDetector.lastConfirmationDate = Date() // need to persist this too
+            let id = ComponentIdentifier.iosVersion.rawValue
+            let descriptor = FetchDescriptor<StoredComponent>(
+                predicate: #Predicate { $0.identifier == id }
+            )
+            if let stored = try? modelContext.fetch(descriptor).first {
+                iosVersionDetector.lastConfirmationDate = stored.lastUpdated
+            }
+        }
+
+        // Device Lock
+        if PersistenceManager.loadCompleteState(
+            identifier: .deviceLock,
+            context: modelContext
+        ) != nil {
+            let id = ComponentIdentifier.deviceLock.rawValue
+            let descriptor = FetchDescriptor<StoredComponent>(
+                predicate: #Predicate { $0.identifier == id }
+            )
+            if let stored = try? modelContext.fetch(descriptor).first,
+               let metadataJSON = stored.metadataJSON,
+               let data = metadataJSON.data(using: .utf8),
+               let metadata = try? JSONDecoder().decode(DeviceLockMetadata.self, from: data) {
+                deviceLockDetector.userConfirmedSixDigitPasscode = metadata.sixDigitPasscode
+                deviceLockDetector.userConfirmedStrongPasscode = metadata.strongPasscode
+                deviceLockDetector.userConfirmedQuickAutoLock = metadata.quickAutoLock
+                deviceLockDetector.biometricAvailable = metadata.biometricAvailable ?? false
+                deviceLockDetector.biometricTestPassed = metadata.biometricTestPassed ?? false
+            }
+        }
+
+        // Bluetooth
+        if PersistenceManager.loadCompleteState(
+            identifier: .bluetoothSecurity,
+            context: modelContext
+        ) != nil {
+            let id = ComponentIdentifier.bluetoothSecurity.rawValue
+            let descriptor = FetchDescriptor<StoredComponent>(
+                predicate: #Predicate { $0.identifier == id }
+            )
+            if let stored = try? modelContext.fetch(descriptor).first,
+               let metadataJSON = stored.metadataJSON,
+               let data = metadataJSON.data(using: .utf8),
+               let metadata = try? JSONDecoder().decode(BluetoothMetadata.self, from: data) {
+                bluetoothSecurityDetector.userEnvironmentConfirmation = metadata.environmentSafety
+            }
+        }
+
+        // Environment Security
+        if PersistenceManager.loadCompleteState(
+            identifier: .environmentalSecurity,
+            context: modelContext
+        ) != nil {
+            let id = ComponentIdentifier.environmentalSecurity.rawValue
+            let descriptor = FetchDescriptor<StoredComponent>(
+                predicate: #Predicate { $0.identifier == id }
+            )
+            if let stored = try? modelContext.fetch(descriptor).first,
+               let metadataJSON = stored.metadataJSON,
+               let data = metadataJSON.data(using: .utf8),
+               let metadata = try? JSONDecoder().decode(EnvironmentalMetadata.self, from: data) {
+                // Restore network trust level if on Wifi
+                if environmentSecurityDetector.networkType == .wifi {
+                    environmentSecurityDetector.networkTrustLevel = metadata.networkTrustLevel
+                }
+                // restore environment type
+                environmentSecurityDetector.environmentType = metadata.environmentType
+            }
+        }
+
+        // check for remembered network(current wifi)
+        if environmentSecurityDetector.networkType == .wifi {
+            let currentSSIDHash = environmentSecurityDetector.currentNetworkName.sha256Hex()
+            let networkDescriptor = FetchDescriptor<RememberedNetwork>(
+                predicate: #Predicate { $0.ssid == currentSSIDHash }
+            )
+            if let remembered = try? modelContext.fetch(networkDescriptor).first {
+                let trustLevel: EnvironmentalSecurityDetector.NetworkTrustLevel = remembered.trustLevel == 1 ? .trusted : .isPublic
+                environmentSecurityDetector.networkTrustLevel = trustLevel
+            }
+        }
+
+        // check for remembered location (if we have current location)
+        if let snapshot = environmentSecurityDetector.currentLocationSnapshot {
+            let geohash = coarsen(snapshot.coordinate)
+            let locationDescriptor = FetchDescriptor<RememberedLocation>(
+                predicate: #Predicate { $0.geohash == geohash }
+            )
+            if let remembered = try? modelContext.fetch(locationDescriptor).first {
+                if let envType = EnvironmentalSecurityDetector.EnvironmentType(rawValue: remembered.context) {
+                    environmentSecurityDetector.environmentType = envType
+                    environmentSecurityDetector.smartSuggestion = envType
+                }
+            }
         }
     }
 
@@ -460,6 +581,12 @@ class SecurityViewModel: ObservableObject {
     }
 
     func handleComponentConfirmation(component: SecurityComponent, confirmed: Bool) {
+        guard let context = modelContext else { return }
+        let autoScore: Int
+        let userScore: Int?
+        let userConfirmed: Bool?
+        var metadataJSON: String? = nil
+
         switch component.identifier {
         case .iosVersion:
             if confirmed {
@@ -467,7 +594,9 @@ class SecurityViewModel: ObservableObject {
             } else {
                 iosVersionDetector.confirmUpdateAvailable()
             }
-            updateSingleComponent(identifier: .iosVersion)
+            autoScore = iosVersionDetector.calculateAutoScore()
+            userScore = iosVersionDetector.getSecurityScore()
+            userConfirmed = iosVersionDetector.isUserConfirmedLatest
 
         case .vpnStatus:
             if confirmed {
@@ -475,20 +604,98 @@ class SecurityViewModel: ObservableObject {
             } else {
                 vpnDetector.confirmNoVPN()
             }
-            updateSingleComponent(identifier: .vpnStatus)
+            autoScore = vpnDetector.isVPNDetected ? 3 : 0
+            userScore = vpnDetector.getSecurityScore()
+            userConfirmed = vpnDetector.isUserConfirmedVPN
 
         case .environmentalSecurity:
-            updateSingleComponent(identifier: .environmentalSecurity)
+            autoScore = environmentSecurityDetector.getNetworkScore()
+            userScore = environmentSecurityDetector.getEnvironmentScore()
+            userConfirmed = true
+
+            let envMetadata = EnvironmentalMetadata(
+                networkTrustLevel: environmentSecurityDetector.networkTrustLevel,
+                environmentType: environmentSecurityDetector.environmentType
+            )
+            if let encoded = try? JSONEncoder().encode(envMetadata),
+               let jsonString = String(data: encoded, encoding: .utf8) {
+                metadataJSON = jsonString
+            }
+            // Also save network and location separately
+            if environmentSecurityDetector.networkType == .wifi,
+               let trustLevel = environmentSecurityDetector.networkTrustLevel {
+                DataStore.rememberNetwork(
+                    ssid: environmentSecurityDetector.currentNetworkName,
+                    trustLevel: trustLevel == .trusted ? 1 : 0,
+                    label: nil,
+                    context: context
+                )
+            }
+
+            if let snapshot = environmentSecurityDetector.currentLocationSnapshot,
+               let envType = environmentSecurityDetector.environmentType {
+                DataStore.rememberLocation(
+                    coord: snapshot.coordinate,
+                    contextLabel: envType.rawValue,
+                    displayName: snapshot.detectedInfo.displayName,
+                    context: context
+                )
+            }
 
         case .deviceLock:
-            updateSingleComponent(identifier: .deviceLock)
+            autoScore = deviceLockDetector.getSecurityScore()
+            userScore = nil
+            userConfirmed = nil
+
+            // create metadata JSON
+            let metadata = DeviceLockMetadata(
+                sixDigitPasscode: deviceLockDetector.userConfirmedSixDigitPasscode,
+                strongPasscode: deviceLockDetector.userConfirmedStrongPasscode,
+                quickAutoLock: deviceLockDetector.userConfirmedQuickAutoLock,
+                biometricAvailable: deviceLockDetector.biometricAvailable,
+                biometricTestPassed: deviceLockDetector.biometricTestPassed
+            )
+
+            if let encoded = try? JSONEncoder().encode(metadata),
+               let jsonString = String(data: encoded, encoding: .utf8) {
+                metadataJSON = jsonString
+            }
 
         case .bluetoothSecurity:
-            updateSingleComponent(identifier: .bluetoothSecurity)
+            // Bluetooth only saves if enabled with confirmation
+            if bluetoothSecurityDetector.bluetoothEnabled {
+                autoScore = bluetoothSecurityDetector.calculateBaseScore()
+                userScore = bluetoothSecurityDetector.getSecurityScore()
+                userConfirmed = bluetoothSecurityDetector.userEnvironmentConfirmation != nil
+
+                let btMetadata = BluetoothMetadata(
+                    environmentSafety: bluetoothSecurityDetector.userEnvironmentConfirmation
+                )
+                if let encoded = try? JSONEncoder().encode(btMetadata),
+                   let jsonString = String(data: encoded, encoding: .utf8) {
+                    metadataJSON = jsonString
+                }
+            } else {
+                // bluetooth disabled = max score, no persistence needed
+                return
+            }
 
         default:
-            break
+            return
         }
+
+        // Save persistence
+        PersistenceManager.saveComponentState(
+            identifier: component.identifier,
+            autoScore: autoScore,
+            userScore: userScore ?? 0,
+            userConfirmed: userConfirmed,
+            maxScore: component.maxScore,
+            metadataJSON: metadataJSON,
+            context: context
+        )
+
+        updateSingleComponent(identifier: component.identifier)
     }
 
     func updateSingleComponent(identifier: ComponentIdentifier) {

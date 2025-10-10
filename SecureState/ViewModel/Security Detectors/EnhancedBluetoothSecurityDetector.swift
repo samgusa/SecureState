@@ -165,7 +165,7 @@ class EnhancedBluetoothSecurityDetector: NSObject, ObservableObject, CBCentralMa
         return calculateBaseScore()
     }
 
-    private func calculateBaseScore() -> Int {
+    func calculateBaseScore() -> Int {
         let deviceCount = nearbyDevices.count
         let suspiciousCount = nearbyDevices.filter { $0.isSuspicious }.count
         let highRiskCount = nearbyDevices.filter { $0.riskLevel == .high }.count

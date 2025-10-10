@@ -160,8 +160,10 @@ class EnvironmentalSecurityDetector: NSObject, ObservableObject, CLLocationManag
         }
     }
 
-    enum NetworkTrustLevel {
-        case trusted, isPublic, unknown
+    enum NetworkTrustLevel: String {
+        case trusted = "trusted"
+        case isPublic = "public"
+        case unknown = "unknown"
 
         var scoreModifier: Int {
             switch self {

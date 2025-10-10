@@ -30,6 +30,7 @@ struct CurrentTabContent: View {
     let timeBasedDetector: TimeBasedRiskDetector
     let realDeviceComponents: [SecurityComponent]
     let realSituationalComponents: [SecurityComponent]
+    let loadRealComponents: () -> Void
 
     var body: some View {
         switch selectedTab {
@@ -69,7 +70,18 @@ struct CurrentTabContent: View {
                 situationalPercentage: situationalPercentage
             )
         case .settings:
-            SettingsTabView()
+            SettingsToggleCard {
+                vpnDetector.resetUserConfirmation()
+                iosVersionDetector.resetUserConfirmation()
+                deviceLockDetector.userConfirmedSixDigitPasscode = nil
+                deviceLockDetector.userConfirmedStrongPasscode = nil
+                deviceLockDetector.userConfirmedQuickAutoLock = nil
+                bluetoothSecurityDetector.userEnvironmentConfirmation = nil
+                environmentalSecurityDetector.networkTrustLevel = nil
+                environmentalSecurityDetector.environmentType = nil
+
+                loadRealComponents()
+            }
         }
     }
 }
@@ -114,6 +126,6 @@ struct CurrentTabContent: View {
             SecurityComponent(identifier: .deviceLock, score: 10, maxScore: 20, icon: "wifi.exclamationmark"),
             SecurityComponent(identifier: .environmentalSecurity, score: 8, maxScore: 15, icon: "location"),
             SecurityComponent(identifier: .timeBasedRisk, score: 5, maxScore: 5, icon: "clock")
-        ]
+        ], loadRealComponents: {}
     )
 }
