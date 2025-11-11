@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct VersionFreshnessMeter: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var detector: iOSVersionDetector
     let daysSinceConfirmation: Int
 
@@ -25,9 +26,9 @@ struct VersionFreshnessMeter: View {
     private var freshnessColor: Color {
         if !hasUserConfirmation { return .gray }
         switch freshnessPercentage {
-        case 0.8...1.0: return .green
-        case 0.5..<0.8: return .orange
-        default: return .red
+        case 0.8...1.0: return themeManager.currentTheme.successColor
+        case 0.5..<0.8: return themeManager.currentTheme.warningColor
+        default: return themeManager.currentTheme.dangerColor
         }
     }
 
@@ -53,24 +54,11 @@ struct VersionFreshnessMeter: View {
             }
 
             // Freshness Progress bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.systemGray5))
-                        .frame(height: 24)
-
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(LinearGradient(
-                            colors: [freshnessColor.opacity(0.7), freshnessColor],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                            )
-                        )
-                        .frame(width: geometry.size.width * freshnessPercentage, height: 24)
-                        .animation(.easeInOut(duration: 0.8), value: freshnessPercentage)
-                }
-            }
-            .frame(height: 24)
+            ThemedProgressBar(
+                progress: freshnessPercentage,
+                color: freshnessColor,
+                height: 24
+            )
 
 
             // Time Infomration
@@ -82,24 +70,21 @@ struct VersionFreshnessMeter: View {
                 if daysSinceConfirmation > 90 {
                     Text("Consider checking for updates - score degrades over time")
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(themeManager.currentTheme.warningColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color.orange.opacity(0.1))
+                        .background(themeManager.currentTheme.warningColor.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
             }
         }
         .padding()
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(freshnessColor.opacity(0.3), lineWidth: 1)
-        }
+        .cardStyle(freshnessColor)
     }
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     VersionFreshnessMeter(detector: iOSVersionDetector(), daysSinceConfirmation: 130)
+        .environmentObject(mockThemeManager)
 }

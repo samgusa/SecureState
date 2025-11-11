@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct VPNTrafficSimulatorView: View {
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var detector: VPNStatusDetector
     let onSelection: (Bool) -> Void
 
@@ -15,6 +17,7 @@ struct VPNTrafficSimulatorView: View {
     @State private var showWithVPN: Bool = false
     @State private var animatingPackets: [PacketAnimation] = []
     @State private var interceptedData: [String] = []
+    @State private var packetProgress: [UUID: Double] = [:]
 
     struct PacketAnimation: Identifiable {
         let id = UUID()
@@ -22,7 +25,6 @@ struct VPNTrafficSimulatorView: View {
         let isEncrypted: Bool
         var progress: Double = 0.0
     }
-
 
     var body: some View {
         VStack(spacing: 24) {
@@ -34,6 +36,7 @@ struct VPNTrafficSimulatorView: View {
                 Text("Traffic Encryption Simulator")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .foregroundStyle(themeManager.currentTheme.primary)
 
                 Text("See the difference between protected and unprotected connections")
                     .font(.subheadline)
@@ -48,10 +51,10 @@ struct VPNTrafficSimulatorView: View {
                         resetSimulation()
                     }
                 }
-                .foregroundStyle(showWithVPN ? Color.secondary : .white)
+                .foregroundStyle(showWithVPN ? themeManager.currentTheme.primary : .white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(showWithVPN ? Color.clear : Color.red)
+                .background(showWithVPN ? Color.clear : themeManager.currentTheme.dangerColor)
 
                 Button("With VPN") {
                     withAnimation(.spring()) {
@@ -59,24 +62,30 @@ struct VPNTrafficSimulatorView: View {
                         resetSimulation()
                     }
                 }
-                .foregroundStyle(showWithVPN ? .white : .secondary)
+                .foregroundStyle(showWithVPN ? .white : themeManager.currentTheme.primary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(showWithVPN ? Color.green : Color.clear)
+                .background(showWithVPN ? themeManager.currentTheme.successColor : Color.clear)
             }
-            .background(Color(.systemGray6))
+            .background(
+                colorScheme == .dark ?
+                Color(.systemGray5) :
+                    Color(.systemGray6)
+            )
             .clipShape(RoundedRectangle(cornerRadius: 12))
 
             // Traffic Simulation View
+
             TrafficSimulatorCanvas(
                 showWithVPN: showWithVPN,
                 isSimulating: $isSimulating,
                 animatingPackets: $animatingPackets,
-                interceptedData: $interceptedData
+                interceptedData: $interceptedData,
+                packetProgress: $packetProgress
             )
             .frame(height: 200)
             .padding()
-            .background(Color(.systemGray6))
+            .themedBackground(0.1)
             .clipShape(RoundedRectangle(cornerRadius: 12))
 
             // Control Button
@@ -87,12 +96,13 @@ struct VPNTrafficSimulatorView: View {
                     startSimulation()
                 }
             }
-            .font(.headline)
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(isSimulating ? .red : .blue)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .buttonStyle(
+                ThemedPrimaryButtonStyle(
+                    color: isSimulating
+                    ? themeManager.currentTheme.dangerColor
+                    : themeManager.currentTheme.successColor
+                )
+            )
 
             // Intercepted Data Display
             if isSimulating || !interceptedData.isEmpty {
@@ -151,6 +161,7 @@ struct VPNTrafficSimulatorView: View {
                     "Personal Message",
                     "Credit Card: 1234-5678-9012"
                 ]
+
         let randomData = sampleData.randomElement() ?? "Data Packet"
         let packet = PacketAnimation(
             data: randomData,
@@ -158,11 +169,9 @@ struct VPNTrafficSimulatorView: View {
         )
         animatingPackets.append(packet)
 
-        // Animate Packet movement
+        // Animate packet movement
         withAnimation(.linear(duration: 2.0)) {
-            if let index = animatingPackets.firstIndex(where: { $0.id == packet.id }) {
-                animatingPackets[index].progress = 1.0
-            }
+            packetProgress[packet.id] = 1.0
         }
 
         // Simulate interception after delay
@@ -175,7 +184,7 @@ struct VPNTrafficSimulatorView: View {
                 // remove completed packet
                 self.animatingPackets.removeAll { $0.id == packet.id }
 
-                //schedule next packet
+                // schedule next packet
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                     self.simulateTraffic()
                 }
@@ -190,10 +199,12 @@ struct VPNTrafficSimulatorView: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     VPNTrafficSimulatorView(
         detector: VPNStatusDetector(),
         onSelection: { _ in
 
         }
     )
+    .environmentObject(mockThemeManager)
 }

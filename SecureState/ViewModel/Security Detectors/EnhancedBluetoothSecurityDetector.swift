@@ -28,8 +28,10 @@ class EnhancedBluetoothSecurityDetector: NSObject, ObservableObject, CBCentralMa
     private var pendingDeviceUpdates: [BluetoothDeviceInfo] = []
     private var batchUpdateTimer: Timer?
 
-    enum EnvironmentSafety {
-        case safe, caution, unsafe
+    enum EnvironmentSafety: String {
+        case safe = "safe"
+        case caution = "caution"
+        case unsafe = "unsafe"
 
         var score: Int {
             switch self {
@@ -52,6 +54,13 @@ class EnhancedBluetoothSecurityDetector: NSObject, ObservableObject, CBCentralMa
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
+
+    deinit {
+        batchUpdateTimer?.invalidate()
+        scanTimer?.invalidate()
+        centralManager.stopScan()
+    }
+
 
     // Cache Management
     func clearCache() {
@@ -101,6 +110,21 @@ class EnhancedBluetoothSecurityDetector: NSObject, ObservableObject, CBCentralMa
         }
     }
 
+    func resetDeviceList() {
+        nearbyDevices.removeAll()
+        hasScannedOnce = false
+        lastScanTime = nil
+        pendingDeviceUpdates.removeAll()
+        batchUpdateTimer?.invalidate()
+
+        // Stop any ongoing scans
+        if isScanning {
+            stopScanning()
+        }
+
+        objectWillChange.send()
+    }
+
     func checkBluetoothStatus() {
         guard bluetoothEnabled else { return }
     }
@@ -131,6 +155,8 @@ class EnhancedBluetoothSecurityDetector: NSObject, ObservableObject, CBCentralMa
 
         batchUpdateTimer?.invalidate()
         processPendingDeviceUpdates()
+
+        Haptic.success()
     }
 
     func confirmEnvironmentSafety(_ safety: EnvironmentSafety) {

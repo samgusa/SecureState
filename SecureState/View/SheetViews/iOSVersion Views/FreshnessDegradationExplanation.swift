@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct FreshnessDegradationExplanation: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let scoringSteps = [
         ("Initial confirmation", "15/15 points", "When you confirm you're up to date"),
         ("After 2 months", "12/15 points", "Security updates may be available"),
@@ -19,7 +20,7 @@ struct FreshnessDegradationExplanation: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "clock.arrow.circlepath")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(themeManager.currentTheme.warningColor)
 
                 Text("How Freshness Scoring Works")
                     .font(.headline)
@@ -40,7 +41,6 @@ struct FreshnessDegradationExplanation: View {
                                     .frame(width: 2, height: 20)
                             }
                         }
-                        .padding(.top, 8)
 
                         VStack(alignment: .leading, spacing: 2) {
                             HStack {
@@ -65,12 +65,7 @@ struct FreshnessDegradationExplanation: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.systemGray4), lineWidth: 1)
-        }
+        .cardStyle(themeManager.currentTheme.primary)
     }
 
     private func getScoreColor(for scoreText: String) -> Color {
@@ -84,6 +79,8 @@ struct FreshnessDegradationExplanation: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     FreshnessDegradationExplanation()
         .frame(width: 350, height: 350)
+        .environmentObject(mockThemeManager)
 }

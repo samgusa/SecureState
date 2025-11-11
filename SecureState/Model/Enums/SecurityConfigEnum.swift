@@ -18,16 +18,16 @@ enum SecurityConfigEnum {
         case moderate = 0.55
         case high = 0.40
 
-        var data: (String, Color, String, Color, colorArr: [Color]) {
+        var data: SecurityLevelInfo {
             switch self {
             case .excellent:
-                return ("Excellent Security", .green, "shield.checkered", .green, [.green, .mint])
+                return SecurityLevelInfo(message: "Excellent", baseColor: .green, icon: "shield.checkerboard")
             case .good:
-                return ("Good Protection", .mint, "shield", .green, [.green, .mint])
+                return SecurityLevelInfo(message: "Good", baseColor: .green, icon: "shield")
             case .moderate:
-                return ("Moderate Risk", .orange, "shield.slash", .orange, [.orange, .yellow])
+                return SecurityLevelInfo(message: "Moderate", baseColor: .orange, icon: "exclamationmark.triangle")
             case .high:
-                return ("High Risk", .red, "exclamationmark.shield", .red, [.red, .pink])
+                return SecurityLevelInfo(message: "High Risk", baseColor: .red, icon: "xmark.shield")
             }
         }
 

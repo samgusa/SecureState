@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct InterceptedDataView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let data: [String]
     let isEncrypted: Bool
 
@@ -15,23 +16,24 @@ struct InterceptedDataView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: isEncrypted ? "lock.fill" : "lock.open.fill")
-                    .foregroundStyle(isEncrypted ? .green : .red)
+                    .foregroundStyle(isEncrypted ? themeManager.currentTheme.successColor : themeManager.currentTheme.dangerColor)
                 Text("Network Observer Sees:")
                     .font(.subheadline)
                     .fontWeight(.medium)
 
                 Spacer()
             }
+
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 4) {
                     ForEach(Array(data.suffix(5).enumerated()), id: \.offset) { index, item in
                         Text(item)
                             .font(.caption)
                             .monospaced()
-                            .foregroundStyle(isEncrypted ? .green : .red)
+                            .foregroundStyle(isEncrypted ? themeManager.currentTheme.successColor : themeManager.currentTheme.dangerColor)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
-                            .background(isEncrypted ? Color.green.opacity(0.1) : Color.red.opacity(0.1))
+                            .background(isEncrypted ? themeManager.currentTheme.successColor.opacity(0.1) : themeManager.currentTheme.dangerColor.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
                 }
@@ -39,15 +41,22 @@ struct InterceptedDataView: View {
             .frame(maxHeight: 100)
         }
         .padding()
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(isEncrypted ? Color.green : Color.red, lineWidth: 1)
-        }
+        .cardStyle(isEncrypted ? themeManager.currentTheme.successColor : themeManager.currentTheme.dangerColor)
     }
 }
 
 #Preview {
-    InterceptedDataView(data: ["Testing 1", "Testing 2", "Testing 3", "Testing 4", "Testing 5", "Testing 6"], isEncrypted: true)
+    let mockThemeManager = ThemeManager()
+    InterceptedDataView(
+        data: [
+            "Testing 1",
+            "Testing 2",
+            "Testing 3",
+            "Testing 4",
+            "Testing 5",
+            "Testing 6"
+        ],
+        isEncrypted: true
+    )
+        .environmentObject(mockThemeManager)
 }

@@ -8,6 +8,10 @@
 import SwiftUI
 
 struct ScreenRecordingTestInstructions: View {
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var themeManager: ThemeManager
+    let onTestCompleted: () -> Void
+    @State private var currentStep: Int = 0
     private let testSteps = [
         "Open Control Center by swiping down from the top-right corner",
         "Look for the screen recording button (circle with a dot inside)",
@@ -15,8 +19,6 @@ struct ScreenRecordingTestInstructions: View {
         "Return to this app and watch the indicator change to red",
         "Open Control Center again and tap the red recording indicator at the top to stop"
     ]
-    let onTestCompleted: () -> Void
-    @State private var currentStep: Int = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -28,7 +30,7 @@ struct ScreenRecordingTestInstructions: View {
                 HStack(alignment: .top, spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(index <= currentStep ? Color.blue : Color(.systemGray5))
+                            .fill(index <= currentStep ? themeManager.currentTheme.primary : Color(.systemGray5))
                             .frame(width: 24, height: 24)
 
                         if index < currentStep {
@@ -40,7 +42,8 @@ struct ScreenRecordingTestInstructions: View {
                             Text("\(index + 1)")
                                 .font(.caption)
                                 .fontWeight(.bold)
-                                .foregroundStyle(index == currentStep ? .white : .secondary)
+                                .foregroundStyle(stepTextColor(for: index))
+
                         }
                     }
                     Text(step)
@@ -80,17 +83,26 @@ struct ScreenRecordingTestInstructions: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.systemGray4), lineWidth: 1)
+        .cardStyle(themeManager.currentTheme.primary)
+    }
+
+    private func stepTextColor(for index: Int) -> Color {
+        if index == currentStep {
+            if themeManager.currentTheme == .default && colorScheme == .dark {
+                return .black
+            } else {
+                return .white
+            }
+        } else {
+            return .secondary
         }
     }
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     ScreenRecordingTestInstructions(onTestCompleted: {
 
     })
+    .environmentObject(mockThemeManager)
 }

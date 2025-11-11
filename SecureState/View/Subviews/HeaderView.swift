@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct HeaderView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var proManager: ProStatusManager
+    @EnvironmentObject var achievementsManager: AchievementsManager
     let isRefreshing: Bool
     let lastRefreshTime: Date
     let securityStatusIcon: String
@@ -22,12 +26,13 @@ struct HeaderView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("How Secure are you right now?")
                         .font(.title2)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.secondary)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(themeManager.currentTheme.primary)
 
                     HStack {
                         Image(systemName: securityStatusIcon)
                             .foregroundStyle(securityStatusColor)
+                            .font(.headline)
                         Text(securityStatusMessage)
                             .font(.headline)
                             .fontWeight(.semibold)
@@ -38,13 +43,14 @@ struct HeaderView: View {
 
                 // Refresh Button
                 Button(action: {
+                    Haptic.tap()
                     Task {
                         await performRefresh()
                     }
                 }) {
                     Image(systemName: "arrow.clockwise")
                         .font(.title2)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.currentTheme.infoColor)
                         .rotationEffect(.degrees(isRefreshing ? 360 : 0))
                         .animation(
                             .linear(duration: 1)
@@ -53,6 +59,25 @@ struct HeaderView: View {
                         )
                 }
                 .disabled(isRefreshing)
+
+#if DEBUG
+                if proManager.isPro {
+                    Button("Test") {
+                        if achievementsManager.recentlyUnlocked != nil {
+                            achievementsManager.recentlyUnlocked = nil
+                        } else {
+                            achievementsManager.recentlyUnlocked = Achievement(
+                                achievementID: .firstScan,
+                                name: "Tester",
+                                description: "Debug achievement",
+                                icon: "star.fill",
+                                rarity: .rare,
+                                category: .mastery
+                            )
+                        }
+                    }
+                }
+#endif
             }
 
             // Last Refresh Time
@@ -73,36 +98,108 @@ struct HeaderView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(.red)
+                        .background(themeManager.currentTheme.dangerColor)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
             }
         }
         .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .cardStyle(themeManager.currentTheme.primary)
     }
 }
 
-#Preview {
-    HeaderView(
-        isRefreshing: false,
-        lastRefreshTime: Date.now,
-        securityStatusIcon: "shield",
-        securityStatusColor: .green,
-        securityStatusMessage: "Secure",
-        overallPercentage: 0.7,
-        performRefresh: { }
-    )
-    .padding(.bottom, 50)
+#Preview("Free User") {
+    // We wrap setup code in a closure that returns the view.
+    let mockThemeManager = ThemeManager()
 
-    HeaderView(
-        isRefreshing: false,
-        lastRefreshTime: Date.now,
-        securityStatusIcon: "shield",
-        securityStatusColor: .green,
-        securityStatusMessage: "Secure",
-        overallPercentage: 0.5,
-        performRefresh: { }
-    )
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let freeProManager = ProStatusManager(storeManager: mockStoreManager)
+        freeProManager.isPro = false  // not pro
+
+        return VStack {
+            HeaderView(
+                isRefreshing: false,
+                lastRefreshTime: Date.now,
+                securityStatusIcon: "shield",
+                securityStatusColor: .green,
+                securityStatusMessage: "Secure",
+                overallPercentage: 0.7,
+                performRefresh: { }
+            )
+            .padding(.bottom, 50)
+            .environmentObject(freeProManager)
+            .environmentObject(mockThemeManager)
+            .environmentObject(achievementManager)
+
+            HeaderView(
+                isRefreshing: false,
+                lastRefreshTime: Date.now,
+                securityStatusIcon: "shield",
+                securityStatusColor: .green,
+                securityStatusMessage: "Secure",
+                overallPercentage: 0.5,
+                performRefresh: { }
+            )
+            .environmentObject(freeProManager)
+            .environmentObject(mockThemeManager)
+            .environmentObject(achievementManager)
+        }
+    }()
+    return view
+}
+
+#Preview("Pro User") {
+    let mockThemeManager = ThemeManager()
+
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let proManager = ProStatusManager(storeManager: mockStoreManager, debug: true)
+
+        return VStack {
+            HeaderView(
+                isRefreshing: false,
+                lastRefreshTime: Date.now,
+                securityStatusIcon: "shield",
+                securityStatusColor: .green,
+                securityStatusMessage: "Secure",
+                overallPercentage: 0.7,
+                performRefresh: { }
+            )
+            .padding(.bottom, 50)
+            .environmentObject(proManager)
+            .environmentObject(mockThemeManager)
+            .environmentObject(achievementManager)
+
+            HeaderView(
+                isRefreshing: false,
+                lastRefreshTime: Date.now,
+                securityStatusIcon: "shield",
+                securityStatusColor: .green,
+                securityStatusMessage: "Secure",
+                overallPercentage: 0.5,
+                performRefresh: { }
+            )
+            .environmentObject(proManager)
+            .environmentObject(mockThemeManager)
+            .environmentObject(achievementManager)
+        }
+    }()
+    return view
 }

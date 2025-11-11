@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct UniversalCard: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var proManager: ProStatusManager
+    @EnvironmentObject var achievementsManager: AchievementsManager
     enum Style {
         case score(_ score: Int, _ maxScore: Int, _ color: Color, _ action: () -> Void)
         case action(_ color: Color, _ isRecommended: Bool)
@@ -43,14 +47,15 @@ struct UniversalCard: View {
                     trailingContent
                 }
                 // Add progress bar for score style
-                if case .score(let score, let maxScore, let color, _) = style {
-                    ProgressBar(score: score, maxScore: maxScore, color: color)
+                if case .score(let score, let maxScore, _, _) = style {
+                    ThemedProgressBar(
+                        progress: Double(score) / Double(maxScore),
+                        color: themedProgressColor
+                    )
                 }
             }
             .padding()
-            .background(Color(.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+            .cardStyle()
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -65,9 +70,14 @@ struct UniversalCard: View {
         case .action(_, let isRecommended):
             HStack(spacing: 4) {
                 if isRecommended {
-                    Text("Recommended").font(.caption2).fontWeight(.medium)
-                        .foregroundColor(.white).padding(.horizontal, 8).padding(.vertical, 4)
-                        .background(iconColor).cornerRadius(6)
+                    Text("Recommended")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(iconColor)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
                 Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
             }
@@ -78,9 +88,15 @@ struct UniversalCard: View {
 
     private var iconColor: Color {
         switch style {
-        case .score(_, _, let color, _): return color
-        case .action(let color, _): return color
-        case .toggle: return .blue
+        case .score(let score, let maxScore, _, _):
+            let percentage = Double(score) / Double(maxScore)
+            if percentage >= 0.8 { return themeManager.currentTheme.successColor }
+            if percentage >= 0.5 { return themeManager.currentTheme.warningColor }
+            return themeManager.currentTheme.dangerColor
+        case .action:
+            return themeManager.currentTheme.primary
+        case .toggle:
+            return themeManager.currentTheme.infoColor
         }
     }
 
@@ -89,6 +105,16 @@ struct UniversalCard: View {
         case .score(_, _, _, let action): return action
         default: return { }
         }
+    }
+
+    private var themedProgressColor: Color {
+        if case .score(let score, let maxScore, _, _) = style {
+            let percentage = Double(score) / Double(maxScore)
+            if percentage >= 0.8 { return themeManager.currentTheme.successColor }
+            if percentage >= 0.5 { return themeManager.currentTheme.warningColor }
+            return themeManager.currentTheme.dangerColor
+        }
+        return themeManager.currentTheme.primary
     }
 }
 
@@ -112,16 +138,113 @@ struct ProgressBar: View {
     }
 }
 
+struct ThemedProgressBar: View {
+    @Environment(\.colorScheme) var colorScheme
+    let progress: Double
+    let color: Color
+    let height: CGFloat
 
-#Preview {
-    UniversalCard(
-        icon: "shield",
-        title: "Device",
-        subtitle: "",
-        style: .score(8, 10, .green, {
-            withAnimation(.spring()) {
+    init(progress: Double, color: Color, height: CGFloat = 8) {
+            self.progress = progress
+            self.color = color
+            self.height = height
+        }
 
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: height / 2)
+                    .fill(colorScheme == .dark ?
+                          Color(.systemGray5).opacity(0.5) :
+                            Color(.systemGray4).opacity(0.4))
+                    .frame(height: height)
+
+                RoundedRectangle(cornerRadius: height / 2)
+                    .fill(
+                        LinearGradient(
+                            colors: [color, color.opacity(0.85)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(
+                        width: geometry.size.width * min(max(progress, 0), 1.0),
+                        height: height
+                    )
+                    .animation(.easeInOut(duration: 0.3), value: progress)
             }
-        })
-    )
+        }
+        .frame(height: height)
+    }
+}
+
+
+#Preview("Free User") {
+    // We wrap setup code in a closure that returns the view.
+    let mockThemeManager = ThemeManager()
+
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let freeProManager = ProStatusManager(storeManager: mockStoreManager)
+        freeProManager.isPro = false  // not pro
+
+        return UniversalCard(
+                icon: "shield",
+                title: "Device",
+                subtitle: "",
+                style: .score(8, 10, .green, {
+                    withAnimation(.spring()) {
+
+                    }
+                })
+            )
+            .environmentObject(mockThemeManager)
+            .environmentObject(achievementManager)
+            .environmentObject(mockStoreManager)
+            .environmentObject(freeProManager)
+
+    }()
+    return view
+}
+
+#Preview("Pro User") {
+    let mockThemeManager = ThemeManager()
+
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let proManager = ProStatusManager(storeManager: mockStoreManager, debug: true)
+
+        return UniversalCard(
+                icon: "shield",
+                title: "Device",
+                subtitle: "",
+                style: .score(8, 10, .green, {
+                    withAnimation(.spring()) {
+
+                    }
+                })
+            )
+            .environmentObject(mockThemeManager)
+            .environmentObject(achievementManager)
+            .environmentObject(mockStoreManager)
+            .environmentObject(proManager)
+
+    }()
+    return view
 }

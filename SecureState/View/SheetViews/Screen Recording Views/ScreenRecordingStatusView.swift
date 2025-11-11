@@ -8,15 +8,18 @@
 import SwiftUI
 
 struct ScreenRecordingStatusView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var detector: ScreenRecordingDetector
     @State private var showTestInstructions: Bool = false
     @State private var hasTestedFeature: Bool = false
+
 
     var body: some View {
         VStack(spacing: 24) {
             // Real time status indicator
             RealTimeRecordingIndicator(detector: detector)
 
+            // Test feature section
             VStack(spacing: 16) {
                 Text("Test This Feature")
                     .font(.headline)
@@ -35,6 +38,7 @@ struct ScreenRecordingStatusView: View {
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 }
+
                 if showTestInstructions {
                     ScreenRecordingTestInstructions {
                         hasTestedFeature = true
@@ -45,15 +49,15 @@ struct ScreenRecordingStatusView: View {
                 if hasTestedFeature {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(themeManager.currentTheme.successColor)
                         Text("Feature tested successfully!")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                            .foregroundStyle(.green)
+                            .foregroundStyle(themeManager.currentTheme.successColor)
                     }
                     .padding()
-                    .background(Color.green.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .background(themeManager.currentTheme.successColor.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
             }
 
@@ -64,5 +68,7 @@ struct ScreenRecordingStatusView: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     ScreenRecordingStatusView(detector: ScreenRecordingDetector())
+        .environmentObject(mockThemeManager)
 }

@@ -20,6 +20,7 @@ struct EnhancedComponentGrid: View {
     let screenRecordingDetector: ScreenRecordingDetector?
     let iosVersionDetector: iOSVersionDetector?
     let timeBasedDetector: TimeBasedRiskDetector?
+    let onComponentUpdate: (ComponentIdentifier, Bool) -> Void
 
 
     var body: some View {
@@ -30,9 +31,6 @@ struct EnhancedComponentGrid: View {
                         ComponentCard(
                             component: component,
                             needsAttention: needsAttentionComponents.contains(component.identifier),
-                            onConfirm: { confirmed in
-                                onComponentTap(component, true)
-                            },
                             networkName: networkName,
                             deviceLockDetector: deviceLockDetector,
                             bluetoothDetector: bluetoothDetector,
@@ -40,7 +38,8 @@ struct EnhancedComponentGrid: View {
                             vpnDetector: vpnDetector,
                             screenRecordingDetector: screenRecordingDetector,
                             iosVersionDetector: iosVersionDetector,
-                            timeBasedDetector: timeBasedDetector
+                            timeBasedDetector: timeBasedDetector,
+                            onUpdate: onComponentUpdate
                         )
                     }
                 }
@@ -68,9 +67,6 @@ struct EnhancedComponentGrid: View {
                                 ComponentCard(
                                     component: component,
                                     needsAttention: needsAttentionComponents.contains(component.identifier),
-                                    onConfirm: { confirmed in
-                                        onComponentTap(component, false)
-                                    },
                                     networkName: networkName,
                                     deviceLockDetector: deviceLockDetector,
                                     bluetoothDetector: bluetoothDetector,
@@ -78,7 +74,8 @@ struct EnhancedComponentGrid: View {
                                     vpnDetector: vpnDetector,
                                     screenRecordingDetector: screenRecordingDetector,
                                     iosVersionDetector: iosVersionDetector,
-                                    timeBasedDetector: timeBasedDetector
+                                    timeBasedDetector: timeBasedDetector,
+                                    onUpdate: onComponentUpdate
                                 )
                             }
                         }
@@ -103,6 +100,7 @@ struct EnhancedComponentGrid: View {
         vpnDetector: VPNStatusDetector(),
         screenRecordingDetector: ScreenRecordingDetector(),
         iosVersionDetector: iOSVersionDetector(),
-        timeBasedDetector: TimeBasedRiskDetector()
+        timeBasedDetector: TimeBasedRiskDetector(),
+        onComponentUpdate: { _, _ in }
     )
 }

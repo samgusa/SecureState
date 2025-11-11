@@ -14,6 +14,6 @@ struct PersistenceController {
     let container: ModelContainer
 
     private init() {
-        container = try! ModelContainer(for: StoredComponent.self, RememberedNetwork.self, RememberedLocation.self)
+        container = try! ModelContainer(for: StoredComponent.self, RememberedNetwork.self, RememberedLocation.self, StoredTrendData.self, UnlockedAchievement.self)
     }
 }

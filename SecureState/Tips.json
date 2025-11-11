@@ -1,0 +1,110 @@
+[
+    {
+        "id": "001",
+        "title": "Use a Password Manager with Zero-Knowledge Architecture",
+        "description": "Choose password managers that use zero-knowledge encryption. This means even the company cannot access your passwords - only you hold the master key. Avoid storing passwords in browsers or unencrypted notes.",
+        "category": "Passwords"
+    },
+    {
+        "id": "002",
+        "title": "Enable DNS-Over-HTTPS on All Devices",
+        "description": "DNS queries reveal every website you visit to your internet provider. Enable encrypted DNS (DoH) in your browser and device settings to prevent DNS snooping. Some providers offer free encrypted DNS.",
+        "category": "Network"
+    },
+    {
+        "id": "003",
+        "title": "Review Third-Party App Access to Your Accounts",
+        "description": "Many apps and services request OAuth access to your accounts. Regularly audit connected apps. Revoke access for unused or suspicious apps.",
+        "category": "Privacy"
+    },
+    {
+        "id": "004",
+        "title": "Use Email Aliases for Online Accounts",
+        "description": "Create unique email addresses for each service using aliases. This prevents data breaches from exposing your primary email and helps identify which companies sell your data.",
+        "category": "Privacy"
+    },
+    {
+        "id": "005",
+        "title": "Disable Auto-Join for Wi-Fi Networks",
+        "description": "Prevent your device from automatically connecting to previously-used networks. Attackers can create fake networks with the same name to intercept your traffic. Manually connect only when you verify the network is legitimate.",
+        "category": "Network"
+    },
+    {
+        "id": "006",
+        "title": "Enable Find My Device and Activation Lock",
+        "description": "Activate Find My iPhone (iOS) or Find My Device (Android) to remotely locate, lock, or erase your device if stolen. Activation Lock prevents thieves from resetting and using your device, making it worthless to steal.",
+        "category": "Device"
+    },
+    {
+        "id": "pro-007",
+        "title": "Use Hardware Security Keys for Critical Accounts",
+        "description": "Physical security keys provide the strongest two-factor authentication. They're immune to phishing and remote attacks. Use them for email, banking, and password manager accounts.",
+        "category": "Passwords"
+    },
+    {
+        "id": "008",
+        "title": "Verify HTTPS and Certificate Status Before Login",
+        "description": "Always check for the padlock icon and 'https://' before entering credentials. Click the padlock to verify the certificate is valid and issued to the correct organization. Attackers use fake certificates on spoofed sites.",
+        "category": "General"
+    },
+    {
+        "id": "009",
+        "title": "Disable Location Services for Apps That Don't Need It",
+        "description": "Most apps don't need constant location access. Review location permissions and set apps to 'While Using' instead of 'Always.' Games, shopping apps, and social media rarely need your precise location.",
+        "category": "Privacy"
+    },
+    {
+        "id": "010",
+        "title": "Use Separate Browsers for Different Activities",
+        "description": "Keep banking and sensitive accounts in one browser, casual browsing in another, and privacy-focused browsing in a third. This limits cross-site tracking and reduces breach impact.",
+        "category": "General"
+    },
+    {
+        "id": "011",
+        "title": "Use unique passwords for every account",
+        "description": "Never reuse passwords across different services. If one account is breached, all accounts with the same password become vulnerable. Use a password manager to generate and store unique passwords.",
+        "category": "Passwords"
+    },
+    {
+        "id": "012",
+        "title": "Enable two-factor authentication everywhere",
+        "description": "Add a second verification step to your important accounts. Even if someone steals your password, they won't be able to access your account without the second factor. Prefer authenticator apps over SMS when possible.",
+        "category": "Passwords"
+    },
+    {
+        "id": "013",
+        "title": "Avoid public Wi-Fi for sensitive activities",
+        "description": "Public networks at cafés, airports, and hotels can be monitored by attackers. Use cellular data or a VPN when accessing banking, email, or entering passwords on shared networks.",
+        "category": "Network"
+    },
+    {
+        "id": "014",
+        "title": "Keep your operating system updated",
+        "description": "Software updates include critical security patches that fix known vulnerabilities. Enable automatic updates on all your devices to stay protected against the latest threats.",
+        "category": "Device"
+    },
+    {
+        "id": "015",
+        "title": "Be skeptical of unexpected messages and links",
+        "description": "Phishing attacks impersonate trusted organizations to steal credentials. Never click links in unexpected emails or texts. When in doubt, visit the website directly by typing the URL yourself.",
+        "category": "General"
+    },
+    {
+        "id": "016",
+        "title": "Review app permissions regularly",
+        "description": "Apps often request more access than they need. Regularly audit which apps can access your location, camera, microphone, and contacts. Revoke permissions that aren't necessary for the app's core function.",
+        "category": "Privacy"
+    },
+    {
+        "id": "017",
+        "title": "Use a strong device lock code",
+        "description": "Your device lock is the first defense against physical access. Use a 6+ digit PIN or biometric authentication. Avoid obvious patterns like '123456' or birthdates that someone might guess.",
+        "category": "Device"
+    },
+    {
+        "id": "018",
+        "title": "Trust your environment before entering sensitive data",
+        "description": "Physical security matters as much as digital. Avoid entering passwords or viewing sensitive information when others can see your screen, especially in crowded or public spaces.",
+        "category": "General"
+    }
+]

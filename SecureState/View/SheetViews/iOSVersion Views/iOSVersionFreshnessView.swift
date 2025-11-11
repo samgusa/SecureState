@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct iOSVersionFreshnessView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var detector: iOSVersionDetector
     let onSelection: (Bool) -> Void
 
@@ -44,6 +45,7 @@ struct iOSVersionFreshnessView: View {
 }
 
 #Preview {
-    iOSVersionFreshnessView(detector: iOSVersionDetector(), onSelection: { _ in
-    })
+    let mockThemeManager = ThemeManager()
+    iOSVersionFreshnessView(detector: iOSVersionDetector(), onSelection: { _ in })
+        .environmentObject(mockThemeManager)
 }

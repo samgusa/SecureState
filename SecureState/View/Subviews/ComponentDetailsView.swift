@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ComponentDetailsView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var proManager: ProStatusManager
+    @EnvironmentObject var achievementsManager: AchievementsManager
     @Binding var securitySection: SecuritySection?
     @Binding var selectedComponentForConfirmation: SecurityComponent?
     @State private var showingConfirmationSheet: Bool = false
@@ -23,6 +27,7 @@ struct ComponentDetailsView: View {
     let timeBasedDetector: TimeBasedRiskDetector
     let realDeviceComponents: [SecurityComponent]
     let realSituationalComponents: [SecurityComponent]
+    let onComponentUpdate: (ComponentIdentifier, Bool) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -30,6 +35,8 @@ struct ComponentDetailsView: View {
                 Text("\(securitySection?.rawValue.capitalized ?? "") Components")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .foregroundStyle(themeManager.currentTheme.primary)
+
 
                 Spacer()
 
@@ -39,7 +46,7 @@ struct ComponentDetailsView: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(.blue)
+                .foregroundStyle(themeManager.currentTheme.primary)
             }
 
             EnhancedComponentGrid(
@@ -56,11 +63,14 @@ struct ComponentDetailsView: View {
                 vpnDetector: vpnDetector,
                 screenRecordingDetector: screenRecordingDetector,
                 iosVersionDetector: iosVersionDetector,
-                timeBasedDetector: timeBasedDetector
+                timeBasedDetector: timeBasedDetector,
+                onComponentUpdate: { identifier, confirmed in
+                    onComponentUpdate(identifier, confirmed)
+                }
             )
         }
         .padding()
-        .background(Color(.systemGray6))
+        .themedBackground(0.1)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .transition(
             .asymmetric(
@@ -80,39 +90,120 @@ struct ComponentDetailsView: View {
     }
 }
 
-#Preview {
-    ComponentDetailsView(
-        securitySection: .constant(.situational),
-        selectedComponentForConfirmation: .constant(
-            SecurityComponent(
-                identifier: .deviceLock,
-                score: 10,
-                maxScore: 10,
-                icon: "key"
-            )
-        ),
-        needsAttentionComponents: .constant([]),
-        onConfirm: { a, b in
+#Preview("Free User") {
+    // We wrap setup code in a closure that returns the view.
+    let mockThemeManager = ThemeManager()
 
-        },
-        networkName: "Testing1",
-        deviceLockDetector: DeviceLockSecurityDetector(),
-        bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector(),
-        environmentalSecurityDetector: EnvironmentalSecurityDetector(),
-        vpnDetector: VPNStatusDetector(),
-        screenRecordingDetector: ScreenRecordingDetector(),
-        iosVersionDetector: iOSVersionDetector(),
-        timeBasedDetector: TimeBasedRiskDetector(),
-        realDeviceComponents: [
-            SecurityComponent(identifier: .vpnStatus, score: 10, maxScore: 15, icon: "shield"),
-            SecurityComponent(identifier: .iosVersion, score: 8, maxScore: 10, icon: "gear"),
-            SecurityComponent(identifier: .deviceLock, score: 6, maxScore: 10, icon: "wifi"),
-            SecurityComponent(identifier: .screenRecording, score: 5, maxScore: 5, icon: "eye.slash")
-        ],
-        realSituationalComponents: [
-            SecurityComponent(identifier: .environmentalSecurity, score: 8, maxScore: 25, icon: "shield"),
-            SecurityComponent(identifier: .timeBasedRisk, score: 5, maxScore: 5, icon: "clock"),
-            SecurityComponent(identifier: .bluetoothSecurity, score: 5, maxScore: 5, icon: "app.badge")
-        ]
-    )
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let freeProManager = ProStatusManager(storeManager: mockStoreManager)
+        freeProManager.isPro = false  // not pro
+
+        return ComponentDetailsView(
+            securitySection: .constant(.situational),
+            selectedComponentForConfirmation: .constant(
+                SecurityComponent(
+                    identifier: .deviceLock,
+                    score: 10,
+                    maxScore: 10,
+                    icon: "key"
+                )
+            ),
+            needsAttentionComponents: .constant([]),
+            onConfirm: { a, b in
+
+            },
+            networkName: "Testing1",
+            deviceLockDetector: DeviceLockSecurityDetector(),
+            bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector(),
+            environmentalSecurityDetector: EnvironmentalSecurityDetector(),
+            vpnDetector: VPNStatusDetector(),
+            screenRecordingDetector: ScreenRecordingDetector(),
+            iosVersionDetector: iOSVersionDetector(),
+            timeBasedDetector: TimeBasedRiskDetector(),
+            realDeviceComponents: [
+                SecurityComponent(identifier: .vpnStatus, score: 10, maxScore: 15, icon: "shield"),
+                SecurityComponent(identifier: .iosVersion, score: 8, maxScore: 10, icon: "gear"),
+                SecurityComponent(identifier: .deviceLock, score: 6, maxScore: 10, icon: "wifi"),
+                SecurityComponent(identifier: .screenRecording, score: 5, maxScore: 5, icon: "eye.slash")
+            ],
+            realSituationalComponents: [
+                SecurityComponent(identifier: .environmentalSecurity, score: 8, maxScore: 25, icon: "shield"),
+                SecurityComponent(identifier: .timeBasedRisk, score: 5, maxScore: 5, icon: "clock"),
+                SecurityComponent(identifier: .bluetoothSecurity, score: 5, maxScore: 5, icon: "app.badge")
+            ],
+            onComponentUpdate: { _, _ in }
+
+        )
+        .environmentObject(freeProManager)
+        .environmentObject(mockThemeManager)
+        .environmentObject(achievementManager)
+
+    }()
+    return view
+}
+
+#Preview("Pro User") {
+    let mockThemeManager = ThemeManager()
+
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let proManager = ProStatusManager(storeManager: mockStoreManager, debug: true)
+
+        return ComponentDetailsView(
+            securitySection: .constant(.situational),
+            selectedComponentForConfirmation: .constant(
+                SecurityComponent(
+                    identifier: .deviceLock,
+                    score: 10,
+                    maxScore: 10,
+                    icon: "key"
+                )
+            ),
+            needsAttentionComponents: .constant([]),
+            onConfirm: { a, b in
+
+            },
+            networkName: "Testing1",
+            deviceLockDetector: DeviceLockSecurityDetector(),
+            bluetoothSecurityDetector: EnhancedBluetoothSecurityDetector(),
+            environmentalSecurityDetector: EnvironmentalSecurityDetector(),
+            vpnDetector: VPNStatusDetector(),
+            screenRecordingDetector: ScreenRecordingDetector(),
+            iosVersionDetector: iOSVersionDetector(),
+            timeBasedDetector: TimeBasedRiskDetector(),
+            realDeviceComponents: [
+                SecurityComponent(identifier: .vpnStatus, score: 10, maxScore: 15, icon: "shield"),
+                SecurityComponent(identifier: .iosVersion, score: 8, maxScore: 10, icon: "gear"),
+                SecurityComponent(identifier: .deviceLock, score: 6, maxScore: 10, icon: "wifi"),
+                SecurityComponent(identifier: .screenRecording, score: 5, maxScore: 5, icon: "eye.slash")
+            ],
+            realSituationalComponents: [
+                SecurityComponent(identifier: .environmentalSecurity, score: 8, maxScore: 25, icon: "shield"),
+                SecurityComponent(identifier: .timeBasedRisk, score: 5, maxScore: 5, icon: "clock"),
+                SecurityComponent(identifier: .bluetoothSecurity, score: 5, maxScore: 5, icon: "app.badge")
+            ],
+            onComponentUpdate: { _, _ in }
+        )
+        .environmentObject(proManager)
+        .environmentObject(mockThemeManager)
+        .environmentObject(achievementManager)
+    }()
+    return view
 }

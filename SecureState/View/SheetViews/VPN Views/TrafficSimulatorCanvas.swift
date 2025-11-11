@@ -8,23 +8,26 @@
 import SwiftUI
 
 struct TrafficSimulatorCanvas: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let showWithVPN: Bool
     @Binding var isSimulating: Bool
     @Binding var animatingPackets: [VPNTrafficSimulatorView.PacketAnimation]
     @Binding var interceptedData: [String]
+    // UPDATE
+    @Binding var packetProgress: [UUID: Double]
 
 
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Connecting Line
+                // Connection Line
                 Path { path in
                     let startPoint = CGPoint(x: 50, y: geometry.size.height / 2)
                     let endPoint = CGPoint(x: geometry.size.width - 50, y: geometry.size.height / 2)
                     path.move(to: startPoint)
                     path.addLine(to: endPoint)
                 }
-                .stroke(showWithVPN ? Color.green : Color.red, lineWidth: 3)
+                .stroke(showWithVPN ? themeManager.currentTheme.successColor : themeManager.currentTheme.dangerColor, lineWidth: 3)
                 .opacity(0.6)
 
                 // Device Icon (Left)
@@ -32,7 +35,7 @@ struct TrafficSimulatorCanvas: View {
                 VStack {
                     Image(systemName: "iphone")
                         .font(.title)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.currentTheme.primary)
                     Text("Your Device")
                         .font(.caption)
                         .fontWeight(.medium)
@@ -43,7 +46,7 @@ struct TrafficSimulatorCanvas: View {
                 VStack {
                     Image(systemName: "server.rack")
                         .font(.title)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.currentTheme.primary)
                     Text("Server")
                         .font(.caption)
                         .fontWeight(.medium)
@@ -51,23 +54,24 @@ struct TrafficSimulatorCanvas: View {
                 .position(x: geometry.size.width - 50, y: geometry.size.height / 2)
 
                 // Network Observer (Middle)
+
                 VStack {
                     Image(systemName: showWithVPN ? "eye.slash.fill" : "eye.fill")
                         .font(.title2)
-                        .foregroundStyle(showWithVPN ? .green : .red)
+                        .foregroundStyle(showWithVPN ? themeManager.currentTheme.successColor : themeManager.currentTheme.dangerColor)
                     Text(showWithVPN ? "Can't See" : "Intercepting")
                         .font(.caption2)
                         .fontWeight(.medium)
-                        .foregroundStyle(showWithVPN ? .green : .red)
+                        .foregroundStyle(showWithVPN ? themeManager.currentTheme.successColor : themeManager.currentTheme.dangerColor)
                 }
                 .position(x: geometry.size.width / 2, y: geometry.size.height / 2 - 40)
 
                 // Animated Packets
                 ForEach(animatingPackets) { packet in
                     PacketView(packet: packet)
-                        .position(x: 50 + (geometry.size.width - 100) * packet.progress,
-                                  y: geometry.size.height / 2)
-
+                        .position(x: 50 + (geometry.size.width - 100) * (packetProgress[packet.id] ?? 0.0),
+                                  y: geometry.size.height / 2
+                        )
                 }
             }
         }
@@ -75,26 +79,13 @@ struct TrafficSimulatorCanvas: View {
 }
 
 #Preview {
-    TrafficSimulatorCanvas(
-        showWithVPN: false,
-        isSimulating: .constant(true),
-        animatingPackets: .constant(
-            [VPNTrafficSimulatorView.PacketAnimation(
-                data: "Username",
-                isEncrypted: false,
-                progress: 0.0
-            ),
-             VPNTrafficSimulatorView.PacketAnimation(
-                data: "Password",
-                isEncrypted: false,
-                progress: 0.0
-             ),
-             VPNTrafficSimulatorView.PacketAnimation(
-                 data: "Data",
-                 isEncrypted: false,
-                 progress: 0.0
-             )
-            ]),
-        interceptedData: .constant(["Info", "Data", "Password"])
+    let mockThemeManager = ThemeManager()
+
+    VPNTrafficSimulatorView(
+        detector: VPNStatusDetector(),
+        onSelection: { _ in
+
+        }
     )
+    .environmentObject(mockThemeManager)
 }

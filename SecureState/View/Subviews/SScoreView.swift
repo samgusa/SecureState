@@ -8,13 +8,15 @@
 import SwiftUI
 
 struct SScoreView: View {
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var themeManager: ThemeManager
     @Binding var animateScore: Bool
     var situationalPercentage: Double
     var situationalGradient: LinearGradient
     var devicePercentage: Double
     var deviceGradient: LinearGradient
     @Binding var selectedSection: SecuritySection?
-    @State var selectedTab: TabAction = .overview
+    @Binding var selectedTab: TabAction
     @State var scrollOffset: CGFloat = 0
     @Binding var situationalScore: Double
     @Binding var deviceScore: Double
@@ -26,7 +28,12 @@ struct SScoreView: View {
         ZStack {
             // Background S Shape with subtle shadow
             SShapePath()
-                .stroke(Color(.systemGray5), lineWidth: 20)
+                .stroke(
+                    themeManager.currentTheme.primary.opacity(
+                        colorScheme == .dark ? 0.4 : 0.2
+                    ),
+                    lineWidth: 20
+                )
                 .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 2)
 
             // Situational Awareness (Top curve)
@@ -68,9 +75,9 @@ struct SScoreView: View {
                         FloatingScoreIndicator(
                             score: Int(situationalScore),
                             maxScore: Int(maxSituationalScore),
-                            isSelected: selectedSection == .situational//,
-                        //  animate: $animateScore,
-                        //  delay: 0.9
+                            isSelected: selectedSection == .situational,
+                            animate: $animateScore,
+                            delay: 0.9
                         )
                         .offset(x: -40, y: -20)
                         .onTapGesture {
@@ -86,15 +93,15 @@ struct SScoreView: View {
                         FloatingScoreIndicator(
                             score: Int(deviceScore),
                             maxScore: Int(maxDeviceScore),
-                            isSelected: selectedSection == .device//,
-                        //  animate: $animateScore,
-                        //  delay: 0.9
+                            isSelected: selectedSection == .device,
+                            animate: $animateScore,
+                            delay: 0.9
                         )
                         .offset(x: 40, y: 20)
                         .onTapGesture {
                             withAnimation(.spring()) {
                                 selectedSection = selectedSection == .device ? nil : .device
-                                //selectedTab = .overview
+                                selectedTab = .overview
                             }
                         }
                         Spacer()
@@ -108,6 +115,7 @@ struct SScoreView: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     SScoreView(
         animateScore: .constant(true),
         situationalPercentage: 0.8,
@@ -126,7 +134,9 @@ struct SScoreView: View {
             endPoint: .center
         ),
         selectedSection: .constant(.situational),
+        selectedTab: .constant(.overview),
         situationalScore: .constant(28),
         deviceScore: .constant(22)
     )
+    .environmentObject(mockThemeManager)
 }

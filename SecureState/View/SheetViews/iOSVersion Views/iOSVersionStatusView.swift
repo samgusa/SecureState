@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct iOSVersionStatusView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var detector: iOSVersionDetector
 
     private var statusColor: Color {
@@ -16,11 +17,11 @@ struct iOSVersionStatusView: View {
         let percentage = Double(score) / Double(maxScore)
 
         if percentage >= 0.8 {
-            return .green
+            return themeManager.currentTheme.successColor
         } else if percentage >= 0.5 {
-            return .orange
+            return themeManager.currentTheme.warningColor
         } else {
-            return .red
+            return themeManager.currentTheme.dangerColor
         }
     }
 
@@ -47,6 +48,7 @@ struct iOSVersionStatusView: View {
                     Text("Current Version")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(themeManager.currentTheme.primary)
 
                     Spacer()
 
@@ -59,7 +61,7 @@ struct iOSVersionStatusView: View {
                     .font(.title3)
                     .fontWeight(.bold)
 
-                Text("Expected latest: ~iOS \((detector.expectedVersionDisplay)).X.X")
+                Text("Expected latest: ~iOS \((detector.expectedVersionDisplay))")
 
                 Text(detector.scoreExplanation)
                     .font(.caption)
@@ -68,11 +70,13 @@ struct iOSVersionStatusView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .themedBackground(0.1)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     iOSVersionStatusView(detector: iOSVersionDetector())
+        .environmentObject(mockThemeManager)
 }

@@ -6,14 +6,18 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct DeviceBiometricTestView: View {
     @ObservedObject var detector: DeviceLockSecurityDetector
+    @EnvironmentObject var achievementsManager: AchievementsManager
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var showingTestResult: Bool = false
+
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("Test your \(detector.biometricTypeString)")
+            Text("Test Your \(detector.biometricTypeString)")
                 .font(.headline)
                 .fontWeight(.medium)
 
@@ -24,8 +28,13 @@ struct DeviceBiometricTestView: View {
 
             Button {
                 Task {
-                    _ = await detector.performBiometricTest()
+                    let success = await detector.performBiometricTest()
                     showingTestResult = true
+
+                    // TRACK:
+                    if success {
+                        achievementsManager.trackBiometricTest()
+                    }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                         showingTestResult = false
                     }
@@ -46,7 +55,7 @@ struct DeviceBiometricTestView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(detector.isTestingBiometric ? Color.gray : Color.blue)
+                .background(detector.isTestingBiometric ? Color.gray : themeManager.currentTheme.primary)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .disabled(detector.isTestingBiometric)
@@ -54,20 +63,42 @@ struct DeviceBiometricTestView: View {
             if detector.biometricTestPassed {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(themeManager.currentTheme.successColor)
 
                     Text("\(detector.biometricTypeString) test passed!")
                         .fontWeight(.medium)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(themeManager.currentTheme.successColor)
                 }
                 .padding()
-                .background(Color.green.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .background(themeManager.currentTheme.successColor.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
     }
 }
 
 #Preview {
-    DeviceBiometricTestView(detector: .init())
+    // We wrap setup code in a closure that returns the view.
+    let mockThemeManager = ThemeManager()
+
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let freeProManager = ProStatusManager(storeManager: mockStoreManager)
+        freeProManager.isPro = false  // not pro
+
+        return DeviceBiometricTestView(detector: .init())
+            .environmentObject(freeProManager)
+            .environmentObject(mockThemeManager)
+            .environmentObject(achievementManager)
+
+    }()
+    return view
 }

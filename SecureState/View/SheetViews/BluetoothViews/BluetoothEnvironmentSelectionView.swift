@@ -9,14 +9,16 @@ import SwiftUI
 import Combine
 
 struct BluetoothEnvironmentSelectionView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var detector: EnhancedBluetoothSecurityDetector
     let onSelection: (EnhancedBluetoothSecurityDetector.EnvironmentSafety) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("How safe does this Bluetooth environment feel")
+            Text("How safe does this Bluetooth environment feel?")
                 .font(.headline)
                 .fontWeight(.semibold)
+                .foregroundStyle(themeManager.currentTheme.primary)
 
             VStack(spacing: 8) {
                 EnvironmentOption(
@@ -24,7 +26,7 @@ struct BluetoothEnvironmentSelectionView: View {
                     title: "Safe",
                     description: "I recognize most devices or I'm in a trusted environment",
                     icon: "checkmark.shield.fill",
-                    color: .green,
+                    color: themeManager.currentTheme.successColor,
                     isSelected: detector.userEnvironmentConfirmation == .safe,
                     onSelect: {
                         detector.confirmEnvironmentSafety(.safe)
@@ -36,7 +38,7 @@ struct BluetoothEnvironmentSelectionView: View {
                     title: "Cautious",
                     description: "Some unknown devices, but environment seems normal",
                     icon: "exclamationmark.shield.fill",
-                    color: .orange,
+                    color: themeManager.currentTheme.warningColor,
                     isSelected: detector.userEnvironmentConfirmation == .caution,
                     onSelect: {
                         detector.confirmEnvironmentSafety(.caution)
@@ -60,25 +62,26 @@ struct BluetoothEnvironmentSelectionView: View {
             if !detector.nearbyDevices.isEmpty {
                 HStack {
                     Image(systemName: "info.circle")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.currentTheme.primary)
 
                     Text("Your selection adjusts the security score based on your trust level of the current environment.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 .padding()
-                .background(Color.blue.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .background(themeManager.currentTheme.primary.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
     }
 }
 
+
 #Preview {
+    let mockThemeManager = ThemeManager()
+
     BluetoothEnvironmentSelectionView(
         detector: .init(),
-        onSelection: { _ in
-
-        }
-    )
+        onSelection: { _ in } )
+    .environmentObject(mockThemeManager)
 }

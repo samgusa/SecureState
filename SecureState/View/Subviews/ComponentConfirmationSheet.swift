@@ -10,6 +10,8 @@ import MapKit
 import CoreLocation
 
 struct ComponentConfirmationSheet: View {
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var themeManager: ThemeManager
     let component: SecurityComponent
     let config: ComponentConfiguration
     let onConfirm: (Bool) -> Void
@@ -71,6 +73,17 @@ struct ComponentConfirmationSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .onDisappear {
+            handleDismiss()
+        }
+    }
+
+    private func handleDismiss() {
+        // Reset bluetooth devices is that was the component being viewed
+        if config.identifier == .bluetoothSecurity {
+            bluetoothDetector?.resetDeviceList()
+        }
+        onDismiss()
     }
 
     // MARK: - Header Section
@@ -78,7 +91,7 @@ struct ComponentConfirmationSheet: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(component.status.color.opacity(0.1))
+                    .fill(component.status.themedColor(theme: themeManager.currentTheme).opacity(0.1))
                     .frame(width: 80, height: 80)
 
                 Image(systemName: config.icon)
@@ -90,6 +103,7 @@ struct ComponentConfirmationSheet: View {
                 Text(config.title)
                     .font(.title2)
                     .fontWeight(.bold)
+                    .foregroundStyle(themeManager.currentTheme.primary)
 
                 HStack(spacing: 16) {
                     // Current Score
@@ -151,7 +165,7 @@ struct ComponentConfirmationSheet: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
                     }
-                    .foregroundStyle(selectedMode == mode ? .white : .primary)
+                    .foregroundStyle(selectedMode == mode ? .white : themeManager.currentTheme.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(
@@ -185,11 +199,11 @@ struct ComponentConfirmationSheet: View {
         let educational = config.educationalContent
 
         return VStack(alignment: .leading, spacing: 24) {
-            // What it does
+            // what it does
             EducationSection(
                 title: "What this Protects",
                 icon: "shield.fill",
-                color: .blue,
+                color: themeManager.currentTheme.primary,
                 content: educational.explanation
             )
 
@@ -205,7 +219,7 @@ struct ComponentConfirmationSheet: View {
             EducationSection(
                 title: "Why It Matters",
                 icon: "exclamationmark.triangle.fill",
-                color: .orange,
+                color: themeManager.currentTheme.warningColor,
                 content: educational.whyItMatters
             )
 
@@ -213,7 +227,7 @@ struct ComponentConfirmationSheet: View {
             StepsEducationSection(
                 title: "How to Improve",
                 icon: "checkmark.circle.fill",
-                color: .green,
+                color: themeManager.currentTheme.successColor,
                 steps: educational.improvementSteps
             )
 
@@ -221,7 +235,7 @@ struct ComponentConfirmationSheet: View {
             ScenariosEducationSection(
                 title: "What Could Go Wrong",
                 icon: "xmark.circle.fill",
-                color: .red,
+                color: themeManager.currentTheme.dangerColor,
                 scenarios: educational.riskScenarios
             )
         }
@@ -371,6 +385,8 @@ struct ComponentConfirmationSheet: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
+
     ComponentConfirmationSheet(
         component: SecurityComponent(
             identifier: .screenRecording,
@@ -398,5 +414,6 @@ struct ComponentConfirmationSheet: View {
         iosVersionDetector: iOSVersionDetector(),
         timeBasedDetector: TimeBasedRiskDetector()
     )
+    .environmentObject(mockThemeManager)
 }
 

@@ -8,8 +8,10 @@
 import SwiftUI
 import CoreLocation
 import MapKit
+import SwiftData
 
 struct EnvironmentLocationMapView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let snapshot: EnvironmentalSecurityDetector.LocationSnapshot
     @Binding var showPreciseLocation: Bool
     @Binding var mapRegion: MKCoordinateRegion
@@ -35,30 +37,30 @@ struct EnvironmentLocationMapView: View {
 
                     Text(snapshot.detectedInfo.displayName)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
 
-                    if snapshot.detectedInfo.detailDescription.isEmpty {
+                    if !snapshot.detectedInfo.detailDescription.isEmpty {
                         Text(snapshot.detectedInfo.detailDescription)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.secondary)
                     }
                 }
 
                 Spacer()
 
-                // Accuracy Indicator
+                // Accuracy indicator
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("±\(Int(snapshot.accuracy))m")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
 
                     if snapshot.isAccurate {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                            .foregroundColor(themeManager.currentTheme.successColor)
                             .font(.caption)
                     } else {
                         Image(systemName: "exclamationmark.circle.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundColor(themeManager.currentTheme.warningColor)
                             .font(.caption)
                     }
                 }
@@ -82,7 +84,7 @@ struct EnvironmentLocationMapView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .disabled(true)
                 } else {
-                    // Fall back for iOS 16 and earlier
+                    // Fallback for iOS 16 and earlier
                     Map(coordinateRegion: .constant(streetLevelRegion),
                         interactionModes: [],
                         showsUserLocation: false,
@@ -91,7 +93,6 @@ struct EnvironmentLocationMapView: View {
                     }
                         .frame(height: 200)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-
                 }
 
                 // Blur overlay when location is hidden
@@ -111,15 +112,17 @@ struct EnvironmentLocationMapView: View {
                             )
                             .background(.regularMaterial)
 
+
                         VStack(spacing: 8) {
+
                             Image(systemName: "eye.slash.fill")
                                 .font(.title2)
-                                .foregroundStyle(.primary)
+                                .foregroundColor(.primary)
 
                             Text("Press & Hold to Reveal")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundStyle(.primary)
+                                .foregroundColor(.primary)
 
                             // Subtle indication of map content beneath
                             Text("Street map ready")
@@ -128,7 +131,7 @@ struct EnvironmentLocationMapView: View {
                         }
                         .padding()
                         .background(.regularMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
             }
@@ -152,6 +155,51 @@ struct EnvironmentLocationMapView: View {
     }
 }
 
-#Preview {
-    ContentView()
+#Preview("Free User") {
+    // We wrap setup code in a closure that returns the view.
+    let mockThemeManager = ThemeManager()
+
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let freeProManager = ProStatusManager(storeManager: mockStoreManager)
+        freeProManager.isPro = false  // not pro
+
+        return ContentView()
+        .environmentObject(freeProManager)
+        .environmentObject(mockThemeManager)
+        .environmentObject(achievementManager)
+
+    }()
+    return view
+}
+
+#Preview("Pro User") {
+    let mockThemeManager = ThemeManager()
+
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let proManager = ProStatusManager(storeManager: mockStoreManager, debug: true)
+
+        return ContentView()
+        .environmentObject(proManager)
+        .environmentObject(mockThemeManager)
+        .environmentObject(achievementManager)
+    }()
+    return view
 }

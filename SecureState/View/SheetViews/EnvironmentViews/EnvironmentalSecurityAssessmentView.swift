@@ -8,9 +8,12 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import SwiftData
 
 struct EnvironmentalSecurityAssessmentView: View {
+    @Environment(\.colorScheme) var colorScheme
     @ObservedObject var detector: EnvironmentalSecurityDetector
+    @EnvironmentObject var themeManager: ThemeManager
     @Binding var showPreciseLocation: Bool
     @Binding var mapRegion: MKCoordinateRegion
     @Binding var hideLocationTimer: Timer?
@@ -41,13 +44,14 @@ struct EnvironmentalSecurityAssessmentView: View {
     }
 
     private func completeAssessment() {
-        // Trigger small delay to ensure all detector state is update
+        // Trigger a small delay to ensure all detector state is updated
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             onComplete()
         }
     }
 
     private var assessmentProgressView: some View {
+        // NEW
         HStack(spacing: 0) {
             ForEach(Array(AssessmentStep.allCases.enumerated()), id: \.element) { index, step in
                 HStack(spacing: 12) {
@@ -58,11 +62,12 @@ struct EnvironmentalSecurityAssessmentView: View {
 
                         if isStepCompleted(step) {
                             Image(systemName: "checkmark")
-                                .foregroundStyle(.white)
-                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(colorScheme == .dark ? getStepIconColor(step) : .white)
+                                .font(.system(size: 14, weight: .bold))
                         } else {
                             Text("\(index + 1)")
-                                .foregroundStyle(.white)
+                            // needs to be getselected to change color.
+                                .foregroundStyle(colorScheme == .dark ? getStepIconColor(step) : .white)
                                 .font(.system(size: 14, weight: .bold))
                         }
                     }
@@ -73,10 +78,10 @@ struct EnvironmentalSecurityAssessmentView: View {
                             }
                         }
                     }
-                    // connecting line (except last step)
+                    // connecting line (except for last step)
                     if index < AssessmentStep.allCases.count - 1 {
                         Rectangle()
-                            .fill(isStepCompleted(AssessmentStep.allCases[index + 1]) ? .green : Color(.systemGray4))
+                            .fill(isStepCompleted(AssessmentStep.allCases[index + 1]) ? themeManager.currentTheme.successColor : Color(.systemGray4))
                             .frame(height: 4)
                             .frame(maxWidth: .infinity)
                     }
@@ -88,11 +93,19 @@ struct EnvironmentalSecurityAssessmentView: View {
 
     private func getStepColor(_ step: AssessmentStep) -> Color {
         if selectedStep == step {
-            return .blue
+            return themeManager.currentTheme.primary
         } else if isStepCompleted(step) {
-            return .green
+            return themeManager.currentTheme.successColor
         } else {
             return Color(.systemGray4)
+        }
+    }
+
+    private func getStepIconColor(_ step: AssessmentStep) -> Color {
+        if selectedStep == step {
+            return .black
+        } else {
+            return .white
         }
     }
 
@@ -146,12 +159,12 @@ struct EnvironmentalSecurityAssessmentView: View {
                         } else {
                             Text("Trust level unknown - confirmation needed")
                                 .font(.caption)
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(themeManager.currentTheme.warningColor)
                         }
                     } else {
                         Text("Private encrypted connection through carrier")
                             .font(.caption)
-                            .foregroundStyle(.green)
+                            .foregroundStyle(themeManager.currentTheme.successColor)
                     }
                 }
                 Spacer()
@@ -168,15 +181,14 @@ struct EnvironmentalSecurityAssessmentView: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .themedBackground(0.1)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
 
             // Network trust confirmation for Wi-Fi
             if detector.networkType == .wifi && detector.networkTrustLevel == .unknown {
                 networkTrustExplanation
             }
-
-            // Network Security tips
+            // Network security tips
             networkSecurityTips
         }
     }
@@ -186,12 +198,12 @@ struct EnvironmentalSecurityAssessmentView: View {
             Text("Network Scoring (0-15 points)")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundStyle(.blue)
+                .foregroundStyle(themeManager.currentTheme.primary)
 
             VStack(spacing: 6) {
                 HStack {
                     Image(systemName: "antenna.radiowaves.left.and.right")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(themeManager.currentTheme.successColor)
                         .frame(width: 20)
                     Text("Cellular Connection")
                         .font(.caption)
@@ -199,12 +211,12 @@ struct EnvironmentalSecurityAssessmentView: View {
                     Text("15 pts")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(themeManager.currentTheme.successColor)
                 }
 
                 HStack {
                     Image(systemName: "wifi")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.currentTheme.primary)
                         .frame(width: 20)
                     Text("Trusted Wi-Fi (home/work)")
                         .font(.caption)
@@ -212,12 +224,12 @@ struct EnvironmentalSecurityAssessmentView: View {
                     Text("12 pts")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(themeManager.currentTheme.primary)
                 }
 
                 HStack {
                     Image(systemName: "wifi")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(themeManager.currentTheme.warningColor)
                         .frame(width: 20)
                     Text("Unknown Wi-Fi")
                         .font(.caption)
@@ -225,12 +237,12 @@ struct EnvironmentalSecurityAssessmentView: View {
                     Text("8 pts")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(themeManager.currentTheme.warningColor)
                 }
 
                 HStack {
                     Image(systemName: "wifi")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(themeManager.currentTheme.dangerColor)
                         .frame(width: 20)
                     Text("Public Wi-Fi (confirmed)")
                         .font(.caption)
@@ -238,16 +250,16 @@ struct EnvironmentalSecurityAssessmentView: View {
                     Text("3 pts")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(themeManager.currentTheme.dangerColor)
                 }
             }
         }
         .padding()
-        .background(Color.blue.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedBackground(0.1)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(themeManager.currentTheme.primary.opacity(0.2), lineWidth: 1)
         }
     }
 
@@ -263,26 +275,26 @@ struct EnvironmentalSecurityAssessmentView: View {
 
             // Simple visual scoring guide
             VStack(spacing: 8) {
-                networkScoreRow("Trusted Network", "12 points", .green, "house.badge.wifi.fill") {
+                networkScoreRow("Trusted Network", "12 points", themeManager.currentTheme.successColor, "house.badge.wifi.fill") {
                     Text("Networks you control: your home, your office")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
-                networkScoreRow("Unknown Network", "8 points", .orange, "wifi.circle") {
+                networkScoreRow("Unknown Network", "8 points", themeManager.currentTheme.warningColor, "wifi.circle") {
                     Text("Current default - need your input to improve")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
-                networkScoreRow("Public Network", "3 points", .red, "wifi.exclamationmark") {
+                networkScoreRow("Public Network", "3 points", themeManager.currentTheme.dangerColor, "wifi.exclamationmark") {
                     Text("Shared networks: coffee shops, hotels, airports")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .themedBackground(0.1)
             .clipShape(RoundedRectangle(cornerRadius: 12))
 
             Text("Choose the option that best describes this Wi-Fi network:")
@@ -306,7 +318,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                             .fontWeight(.bold)
                     }
                     .padding()
-                    .background(Color.green)
+                    .background(themeManager.currentTheme.successColor)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
@@ -327,7 +339,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                             .fontWeight(.bold)
                     }
                     .padding()
-                    .background(Color.red)
+                    .background(themeManager.currentTheme.dangerColor)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
@@ -337,7 +349,7 @@ struct EnvironmentalSecurityAssessmentView: View {
             if let confirmed = detector.userConfirmedNetworkType {
                 HStack(spacing: 8) {
                     Image(systemName: confirmed ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                        .foregroundStyle(confirmed ? .green : .orange)
+                        .foregroundStyle(confirmed ? themeManager.currentTheme.successColor : themeManager.currentTheme.warningColor)
 
                     Text(confirmed ?
                          "Network confirmed as trusted (+4 points to score)" :
@@ -346,8 +358,8 @@ struct EnvironmentalSecurityAssessmentView: View {
                     .foregroundStyle(.secondary)
                 }
                 .padding()
-                .background((confirmed ? Color.green : Color.orange).opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .background((confirmed ? themeManager.currentTheme.successColor : themeManager.currentTheme.warningColor).opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
     }
@@ -382,11 +394,12 @@ struct EnvironmentalSecurityAssessmentView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "lightbulb.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(themeManager.currentTheme.warningColor)
                 Text("Network Security Tips")
                     .font(.subheadline)
                     .fontWeight(.semibold)
             }
+
             VStack(alignment: .leading, spacing: 4) {
                 tipRow("Switch to cellular data in public spaces for maximum security", icon: "antenna.radiowaves.left.and.right")
                 tipRow("Use VPN on any shared network to encrypt your traffic", icon: "shield.fill")
@@ -394,14 +407,14 @@ struct EnvironmentalSecurityAssessmentView: View {
             }
         }
         .padding()
-        .background(Color.orange.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(themeManager.currentTheme.warningColor.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private func tipRow(_ text: String, icon: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: icon)
-                .foregroundStyle(.orange)
+                .foregroundStyle(themeManager.currentTheme.warningColor)
                 .font(.caption)
                 .frame(width: 16)
 
@@ -421,7 +434,7 @@ struct EnvironmentalSecurityAssessmentView: View {
             // Location detection status
             EnvironmentLocationDetectionStatusView(detector: detector)
 
-            // MapView if location is available
+            // MAPVIew if location is available
             if let snapshot = detector.currentLocationSnapshot {
                 EnvironmentLocationMapView(
                     snapshot: snapshot,
@@ -446,6 +459,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                 ForEach(EnvironmentalSecurityDetector.EnvironmentType.allCases, id: \.rawValue) { environment in
                     Button {
                         detector.selectEnvironmentType(environment)
+
                         if detector.networkType == .cellular || detector.networkTrustLevel != nil {
                             selectedStep = .summary
                         }
@@ -460,6 +474,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                                     .font(.system(size: 16))
                                     .foregroundStyle(environment.color)
                             }
+
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(environment.displayName)
                                     .font(.subheadline)
@@ -475,7 +490,7 @@ struct EnvironmentalSecurityAssessmentView: View {
 
                             if detector.environmentType == environment {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(themeManager.currentTheme.successColor)
                             } else {
                                 Text("+\(environment.scoreModifier)")
                                     .font(.caption)
@@ -486,17 +501,17 @@ struct EnvironmentalSecurityAssessmentView: View {
                         .padding(.vertical, 8)
                         .padding(.horizontal, 12)
                         .background(
-                            detector.environmentType == environment ? environment.color.opacity(0.1) : Color(.systemGray6)
+                            detector.environmentType == environment ? environment.color.opacity(0.1) : themeManager.currentTheme.primary.opacity(0.05)
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 8)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
                                 .stroke(
                                     detector.environmentType == environment ?
                                     environment.color : Color.clear,
                                     lineWidth: 2
                                 )
-                        }
+                        )
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
@@ -510,7 +525,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                 .font(.headline)
                 .fontWeight(.semibold)
 
-            // Score breakdown
+            // Score Breakdown
             VStack(spacing: 12) {
                 HStack {
                     Text("Network Security:")
@@ -523,7 +538,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                 }
 
                 HStack {
-                    Text("Environment Modifier")
+                    Text("Environment Modifier:")
                         .font(.subheadline)
                     Spacer()
                     Text("+\(detector.getEnvironmentModifier()) points")
@@ -531,7 +546,10 @@ struct EnvironmentalSecurityAssessmentView: View {
                         .fontWeight(.medium)
                         .foregroundStyle(detector.environmentType?.color ?? .gray)
                 }
-                Divider()
+
+                Rectangle()
+                    .fill(themeManager.currentTheme.primary.opacity(0.15))
+                    .frame(height: 1)
 
                 HStack {
                     Text("Total Environmental Score:")
@@ -545,8 +563,8 @@ struct EnvironmentalSecurityAssessmentView: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .themedBackground(0.1)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
 
             // Recommendations
             VStack(alignment: .leading, spacing: 8) {
@@ -557,7 +575,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                 ForEach(detector.getRecommendationsForCurrentScore(), id: \.self) { recommendation in
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lightbulb.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(themeManager.currentTheme.warningColor)
                             .font(.caption)
 
                         Text(recommendation)
@@ -568,8 +586,8 @@ struct EnvironmentalSecurityAssessmentView: View {
                 }
             }
             .padding()
-            .background(Color.orange.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .background(themeManager.currentTheme.warningColor.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
 
             if allAssessmentComplete {
                 Button("Complete Assessment") {
@@ -583,6 +601,7 @@ struct EnvironmentalSecurityAssessmentView: View {
     private var allAssessmentComplete: Bool {
         // Network assessment complete
         let networkComplete = detector.networkType == .cellular || detector.networkTrustLevel != nil
+
         // Environment assessment complete
         let environmentComplete = detector.environmentType != nil
 
@@ -615,23 +634,74 @@ struct EnvironmentalSecurityAssessmentView: View {
         default: return .gray
         }
     }
-
 }
 
 
-#Preview {
-    EnvironmentalSecurityAssessmentView(
-        detector: EnvironmentalSecurityDetector(),
-        showPreciseLocation: .constant(false),
-        mapRegion: .constant(MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 34.011286, longitude: -116.166868),
-            span: MKCoordinateSpan(
-                latitudeDelta: 0.008,
-                longitudeDelta: 0.008
-            )
-        )),
-        hideLocationTimer: .constant(nil)) {
+#Preview("Free User") {
+    // We wrap setup code in a closure that returns the view.
+    let mockThemeManager = ThemeManager()
 
-        }
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let freeProManager = ProStatusManager(storeManager: mockStoreManager)
+        freeProManager.isPro = false  // not pro
+
+        return EnvironmentalSecurityAssessmentView(
+            detector: EnvironmentalSecurityDetector(),
+            showPreciseLocation: .constant(false),
+            mapRegion: .constant(MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 34.011286, longitude: -116.166868),
+                span: MKCoordinateSpan(
+                    latitudeDelta: 0.008,
+                    longitudeDelta: 0.008
+                )
+            )),
+            hideLocationTimer: .constant(nil)) { }
+            .environmentObject(freeProManager)
+            .environmentObject(mockThemeManager)
+            .environmentObject(achievementManager)
+
+    }()
+    return view
 }
 
+#Preview("Pro User") {
+    let mockThemeManager = ThemeManager()
+
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
+    let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
+        let mockStoreManager = EnhancedStoreManager()
+        let proManager = ProStatusManager(storeManager: mockStoreManager, debug: true)
+
+        return EnvironmentalSecurityAssessmentView(
+            detector: EnvironmentalSecurityDetector(),
+            showPreciseLocation: .constant(false),
+            mapRegion: .constant(MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 34.011286, longitude: -116.166868),
+                span: MKCoordinateSpan(
+                    latitudeDelta: 0.008,
+                    longitudeDelta: 0.008
+                )
+            )),
+            hideLocationTimer: .constant(nil)) { }
+            .environmentObject(proManager)
+            .environmentObject(mockThemeManager)
+            .environmentObject(achievementManager)
+    }()
+    return view
+}

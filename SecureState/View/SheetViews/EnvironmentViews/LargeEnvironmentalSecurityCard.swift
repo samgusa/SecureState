@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct LargeEnvironmentalSecurityCard: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let component: SecurityComponent
     let needsAttention: Bool
     let environmentDetector: EnvironmentalSecurityDetector?
@@ -17,11 +18,11 @@ struct LargeEnvironmentalSecurityCard: View {
     @State private var showDetailSheet: Bool = false
 
     var body: some View {
-        Button {
+        Button(action: {
             showDetailSheet = true
-        } label: {
-            // Header with icon and score
+        }) {
             VStack(alignment: .leading, spacing: 16) {
+                // Header with icon and score
                 HStack {
                     ZStack {
                         Circle()
@@ -34,15 +35,17 @@ struct LargeEnvironmentalSecurityCard: View {
 
                         if needsAttention {
                             Image(systemName: "exclamationmark.circle.fill")
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(themeManager.currentTheme.warningColor)
                                 .font(.caption)
                                 .background(Color.white)
                                 .clipShape(Circle())
                                 .offset(x: 16, y: -16)
                                 .scaleEffect(pulseAnimation ? 1.2 : 1.0)
                                 .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: pulseAnimation)
+
                         }
                     }
+
                     Spacer()
 
                     HStack(spacing: 2) {
@@ -51,7 +54,6 @@ struct LargeEnvironmentalSecurityCard: View {
                             .font(.title)
                             .fontWeight(.bold)
                             .foregroundStyle(component.status.color)
-
 
                         Text("/ \(component.maxScore)")
                             .font(.caption)
@@ -63,26 +65,25 @@ struct LargeEnvironmentalSecurityCard: View {
                 // Title and description
                 VStack(alignment: .leading, spacing: 8) {
                     Text(component.name)
-                        .foregroundStyle(.black)
+                        .foregroundStyle(themeManager.currentTheme.primary)
                         .font(.headline)
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.leading)
                 }
 
-                // ProgressBar
-                ProgressBar(
-                    score: component.score,
-                    maxScore: component.maxScore,
-                    color: component.status.color
+                // Progress bar
+                ThemedProgressBar(
+                    progress: component.percentage,
+                    color: needsAttention ? themeManager.currentTheme.warningColor : component.status.color
                 )
             }
             .padding(20)
-            .background(needsAttention ? Color.orange.opacity(0.05) : Color(.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .background(needsAttention ? themeManager.currentTheme.warningColor.opacity(0.05) : Color(.systemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
             .overlay {
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(needsAttention ? .orange.opacity(0.3) : Color(.systemGray3), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(needsAttention ? .orange.opacity(0.3) : themeManager.currentTheme.primary.opacity(0.2), lineWidth: 1)
             }
             .buttonStyle(PlainButtonStyle())
             .onAppear {
@@ -121,7 +122,12 @@ struct LargeEnvironmentalSecurityCard: View {
     }
 }
 
+/*
+
+ */
+
 #Preview {
+    let mockThemeManager = ThemeManager()
     LargeEnvironmentalSecurityCard(
         component: SecurityComponent(
             identifier: .environmentalSecurity,
@@ -129,8 +135,9 @@ struct LargeEnvironmentalSecurityCard: View {
             maxScore: 25,
             icon: "shield"
         ),
-        needsAttention: true,
+        needsAttention: false,
         environmentDetector: EnvironmentalSecurityDetector(),
         onTap: { }
     )
+    .environmentObject(mockThemeManager)
 }

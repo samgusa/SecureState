@@ -8,24 +8,26 @@
 import SwiftUI
 
 struct BluetoothDetectionStatusView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var detector: EnhancedBluetoothSecurityDetector
 
     var body: some View {
         VStack(spacing: 12) {
             HStack {
                 Circle()
-                    .fill(detector.bluetoothEnabled ? .green : .red)
+                    .fill(detector.bluetoothEnabled ? themeManager.currentTheme.successColor : themeManager.currentTheme.dangerColor)
                     .frame(width: 12, height: 12)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Bluetooth: \(detector.bluetoothEnabled ? "Enabled" : "Diabled")")
+                    Text("Bluetooth: \(detector.bluetoothEnabled ? "Enabled" : "Disabled")")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(themeManager.currentTheme.primary)
 
                     if !detector.bluetoothEnabled {
                         Text("Bluetooth disabled provides maximum security")
                             .font(.caption)
-                            .foregroundStyle(.green)
+                            .foregroundStyle(themeManager.currentTheme.successColor)
                     } else if !detector.hasScannedOnce {
                         Text("Scan to assess Bluetooth environment")
                             .font(.caption)
@@ -52,17 +54,18 @@ struct BluetoothDetectionStatusView: View {
                     .font(.caption)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(detector.isScanning ? .gray : .blue)
+                    .background(detector.isScanning ? .gray : themeManager.currentTheme.primary)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                     .disabled(detector.isScanning)
+
                 }
             }
 
             // Environmental Context with clearer message
             HStack {
                 Image(systemName: detector.bluetoothEnabled ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
-                    .foregroundStyle(detector.bluetoothEnabled ? .blue : .green)
+                    .foregroundStyle(detector.bluetoothEnabled ? themeManager.currentTheme.primary : themeManager.currentTheme.successColor)
 
                 Text(detector.environmentalContext)
                     .font(.caption)
@@ -71,12 +74,12 @@ struct BluetoothDetectionStatusView: View {
                 Spacer()
             }
             .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .themedBackground(0.1)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .shimmer(
                 .init(
                     tint: .clear,
-                    highlight: Color(.white).opacity(0.8)
+                    highlight: themeManager.currentTheme.accent
                 ),
                 animation: $detector.isScanning
             )
@@ -85,7 +88,8 @@ struct BluetoothDetectionStatusView: View {
 }
 
 #Preview {
-    BluetoothDetectionStatusView(
-        detector: .init()
-    )
+    let mockThemeManager = ThemeManager()
+    
+    BluetoothDetectionStatusView(detector: .init())
+        .environmentObject(mockThemeManager)
 }

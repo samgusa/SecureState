@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AppleReleaseCycleInfo: View {
+    @EnvironmentObject var themeManager: ThemeManager
+
     let releaseInfo = [
         ("Major iOS Release", "September annually", "iOS 18, 26, etc."),
         ("Security Updates", "Throughout the year", "Critical patches"),
@@ -18,7 +20,7 @@ struct AppleReleaseCycleInfo: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "calendar")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(themeManager.currentTheme.primary)
 
                 Text("Apple's Update Schedule")
                     .font(.headline)
@@ -28,7 +30,7 @@ struct AppleReleaseCycleInfo: View {
                 ForEach(releaseInfo, id: \.0) { info in
                     HStack(alignment: .top, spacing: 12) {
                         Circle()
-                            .fill(Color.blue)
+                            .foregroundStyle(themeManager.currentTheme.primary)
                             .frame(width: 6, height: 6)
                             .padding(.top, 6)
                             .padding(.leading, 8)
@@ -56,15 +58,16 @@ struct AppleReleaseCycleInfo: View {
             }
         }
         .padding()
-        .background(Color.blue.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .themedBackground(0.1)
         .overlay {
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                .stroke(themeManager.currentTheme.primary.opacity(0.2), lineWidth: 1)
         }
     }
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     AppleReleaseCycleInfo()
+        .environmentObject(mockThemeManager)
 }

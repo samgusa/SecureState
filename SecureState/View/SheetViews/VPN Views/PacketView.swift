@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PacketView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let packet: VPNTrafficSimulatorView.PacketAnimation
 
     var body: some View {
@@ -20,20 +21,22 @@ struct PacketView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(packet.isEncrypted ? Color.green.opacity(0.3) : Color.red.opacity(0.3))
+        .background(packet.isEncrypted ? themeManager.currentTheme.successColor.opacity(0.3) : themeManager.currentTheme.dangerColor.opacity(0.3))
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .overlay {
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.systemGray4), lineWidth: 1)
+                .stroke(themeManager.currentTheme.primary.opacity(0.2), lineWidth: 1)
         }
     }
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     PacketView(packet: VPNTrafficSimulatorView.PacketAnimation(
         data: "Password",
         isEncrypted: false,
         progress: 0.0
     )
     )
+    .environmentObject(mockThemeManager)
 }
