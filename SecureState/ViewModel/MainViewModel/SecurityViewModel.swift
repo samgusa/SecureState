@@ -351,6 +351,9 @@ class SecurityViewModel: ObservableObject {
                 self.situationalScore = Double(totalSituationScore)
             }
             updateNeedsAttentionComponents()
+
+            let score = Int(self.totalScore)
+            achievementsManager?.trackSecurityCheck(score: score)
         }
         isRefreshing = false
     }
@@ -569,6 +572,7 @@ class SecurityViewModel: ObservableObject {
         case .vpnStatus:
             if confirmed {
                 vpnDetector.confirmVPNActive()
+                achievementsManager?.trackVPNConfirmed()
             } else {
                 vpnDetector.confirmNoVPN()
             }
@@ -722,6 +726,8 @@ class SecurityViewModel: ObservableObject {
                     withAnimation(.easeInOut(duration: 0.5)) {
                         animateScore = true
                     }
+                    let score = Int(totalScore)
+                    achievementsManager?.trackSecurityCheck(score: score)
                 }
             }
         } else {
@@ -730,6 +736,8 @@ class SecurityViewModel: ObservableObject {
                 withAnimation(.easeInOut(duration: 0.5)) {
                     self.animateScore = true
                 }
+                let score = Int(self.totalScore)
+                self.achievementsManager?.trackSecurityCheck(score: score)
             }
         }
         // Initial check for components needing attention

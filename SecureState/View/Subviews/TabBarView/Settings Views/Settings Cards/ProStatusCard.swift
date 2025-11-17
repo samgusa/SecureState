@@ -27,14 +27,14 @@ struct ProStatusCard: View {
                             .frame(width: 45, height: 45)
 
                         Image(systemName: "checkmark.seal.fill")
-                            .foregroundStyle(themeManager.currentTheme.successColor)
+                            .themedForeground(themeManager.currentTheme.successColor)
                             .font(.title3)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("SecureState Pro")
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundStyle(themeManager.currentTheme.primary)
+                            .themedForeground(themeManager.currentTheme.primary)
 
                         Text("All features unlocked")
                             .font(.caption)
@@ -101,7 +101,7 @@ struct ProStatusCard: View {
                             Text("Starts at only $0.99")
                                 .font(.subheadline)
                                 .fontWeight(.bold)
-                                .foregroundStyle(themeManager.currentTheme.warningColor)
+                                .themedForeground(themeManager.currentTheme.warningColor)
 
                             Text("One-time or subscription")
                                 .font(.caption)

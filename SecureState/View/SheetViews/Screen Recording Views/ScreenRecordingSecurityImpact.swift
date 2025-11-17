@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ScreenRecordingSecurityImpact: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let risks = [
         ("Passwords", "Visible when typing or displayed on screen"),
         ("Banking Info", "Account numbers, balances, transactions"),
@@ -20,7 +21,7 @@ struct ScreenRecordingSecurityImpact: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Image(systemName: "exclamationmark.shield.fill")
-                    .foregroundStyle(.orange)
+                    .themedForeground(themeManager.currentTheme.warningColor)
 
                 Text("What Gets Captured During Recording")
                     .font(.headline)
@@ -32,7 +33,7 @@ struct ScreenRecordingSecurityImpact: View {
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "eye.fill")
                             .font(.caption)
-                            .foregroundStyle(.red)
+                            .themedForeground(themeManager.currentTheme.dangerColor)
                             .frame(width: 16)
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -59,5 +60,7 @@ struct ScreenRecordingSecurityImpact: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     ScreenRecordingSecurityImpact()
+        .environmentObject(mockThemeManager)
 }

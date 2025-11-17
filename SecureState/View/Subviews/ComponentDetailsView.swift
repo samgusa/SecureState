@@ -35,7 +35,7 @@ struct ComponentDetailsView: View {
                 Text("\(securitySection?.rawValue.capitalized ?? "") Components")
                     .font(.headline)
                     .fontWeight(.semibold)
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
 
 
                 Spacer()
@@ -46,7 +46,7 @@ struct ComponentDetailsView: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
             }
 
             EnhancedComponentGrid(

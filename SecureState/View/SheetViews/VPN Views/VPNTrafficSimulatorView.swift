@@ -36,7 +36,7 @@ struct VPNTrafficSimulatorView: View {
                 Text("Traffic Encryption Simulator")
                     .font(.headline)
                     .fontWeight(.semibold)
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
 
                 Text("See the difference between protected and unprotected connections")
                     .font(.subheadline)
@@ -85,7 +85,7 @@ struct VPNTrafficSimulatorView: View {
             )
             .frame(height: 200)
             .padding()
-            .themedBackground(0.1)
+            .themedBackground(0.1, 0.4)
             .clipShape(RoundedRectangle(cornerRadius: 12))
 
             // Control Button

@@ -22,12 +22,12 @@ struct BluetoothDetectionStatusView: View {
                     Text("Bluetooth: \(detector.bluetoothEnabled ? "Enabled" : "Disabled")")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
 
                     if !detector.bluetoothEnabled {
                         Text("Bluetooth disabled provides maximum security")
                             .font(.caption)
-                            .foregroundStyle(themeManager.currentTheme.successColor)
+                            .themedForeground(themeManager.currentTheme.successColor)
                     } else if !detector.hasScannedOnce {
                         Text("Scan to assess Bluetooth environment")
                             .font(.caption)

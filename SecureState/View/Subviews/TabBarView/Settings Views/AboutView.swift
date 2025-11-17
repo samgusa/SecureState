@@ -55,7 +55,7 @@ struct AboutView: View {
                         Text("Our Mission")
                             .font(.headline)
                             .fontWeight(.semibold)
-                            .foregroundStyle(themeManager.currentTheme.primary)
+                            .themedForeground(themeManager.currentTheme.primary)
 
                         Text("SecureState provides real-time, contextual security awareness through honest assessment and education. We believe in empowering users to make informed decisions about their digital security - without fear-mongering or data collection. Pro users can access global security trends from public sources.")
                             .font(.subheadline)
@@ -73,7 +73,7 @@ struct AboutView: View {
                         Text("Core Principles")
                             .font(.headline)
                             .fontWeight(.semibold)
-                            .foregroundStyle(themeManager.currentTheme.primary)
+                            .themedForeground(themeManager.currentTheme.primary)
 
                         ForEach(principles, id: \.title) { principle in
                             principleRow(

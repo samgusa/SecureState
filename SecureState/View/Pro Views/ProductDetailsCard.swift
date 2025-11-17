@@ -26,11 +26,11 @@ struct ProductDetailsCard: View {
                 if isPurchased {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(themeManager.currentTheme.successColor)
+                            .themedForeground(themeManager.currentTheme.successColor)
                         Text("Purchased")
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundStyle(themeManager.currentTheme.successColor)
+                            .themedForeground(themeManager.currentTheme.successColor)
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)

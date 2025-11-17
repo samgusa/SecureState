@@ -14,6 +14,8 @@ class AchievementsManager: ObservableObject {
     @Published var achievements: [Achievement] = Achievement.allAchievements
     @Published var recentlyUnlocked: Achievement?
     @Published var selectedBadge: Achievement?
+    @Published var notificationQueue: [Achievement] = []
+    private var activeNotificationId: UUID?
 
     private let modelContext: ModelContext
 
@@ -27,6 +29,7 @@ class AchievementsManager: ObservableObject {
     @Published var biometricTests: Int = 0
     @Published var trendsViews: Int = 0
     @Published var lastCheckDate: Date?
+    @Published var lastBiometricTest: Date?
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -40,7 +43,9 @@ class AchievementsManager: ObservableObject {
         guard let unlocked = try? modelContext.fetch(descriptor) else { return }
 
         for unlockedAch in unlocked {
-            if let index = achievements.firstIndex(where: { $0.id == unlockedAch.achievementId }) {
+            if let index = achievements.firstIndex(where: {
+                $0.achievementID.rawValue == unlockedAch.achievementId
+            }) {
                 achievements[index].unlockedDate = unlockedAch.unlockedDate
             }
         }
@@ -74,8 +79,15 @@ class AchievementsManager: ObservableObject {
     }
 
     private func loadSelectedBadge() {
+        guard !achievements.isEmpty else {
+            print("⚠️ Attempted to load badge before achievements loaded")
+            return
+        }
+
         if let badgeId = UserDefaults.standard.string(forKey: "selectedBadge"),
-           let badge = achievements.first(where: { $0.id == badgeId && $0.isUnlocked }) {
+           let badge = achievements.first(where: {
+               $0.achievementID.rawValue == badgeId && $0.isUnlocked
+           }) {
             selectedBadge = badge
         } else {
             selectedBadge = nil
@@ -105,41 +117,61 @@ class AchievementsManager: ObservableObject {
         }
     }
 
-    func unlockAchievement(_ achievementId: String) {
-        guard let index = achievements.firstIndex(where: { $0.id == achievementId }),
+    func unlockAchievement(_ achievementId: AchievementID) {
+        guard let index = achievements.firstIndex(where: { $0.achievementID == achievementId }),
               !achievements[index].isUnlocked else { return }
 
         let unlockDate = Date()
         achievements[index].unlockedDate = unlockDate
 
         // persist to SwiftData
-        let unlockedAch = UnlockedAchievement(achievementId: achievementId, unlockedDate: unlockDate)
+        let unlockedAch = UnlockedAchievement(
+            achievementId: achievementId.rawValue,
+            unlockedDate: unlockDate
+        )
         modelContext.insert(unlockedAch)
         try? modelContext.save()
-
-        // show notification
-        recentlyUnlocked = achievements[index]
 
         // Haptics feedback
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
-
-        // auto dismiss after 3 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            self.recentlyUnlocked = nil
-        }
-
         Haptic.success()
+
+        // Add to notification queue (don't show immediately)
+        notificationQueue.append(achievements[index])
+        showNextNotification()
+
         // check for completionist achievement
         checkCompletionist()
     }
 
-    private func checkCompletionist() {
-        let unlockedCount = achievements.filter { $0.isUnlocked && $0.id != "completionist" }.count
-        let totalCount = achievements.count - 1 // Exclude completionist itself
+    private func showNextNotification() {
+        guard recentlyUnlocked == nil, !notificationQueue.isEmpty else { return }
 
+        recentlyUnlocked = notificationQueue.removeFirst()
+        let notificationId = UUID()
+        activeNotificationId = notificationId
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self = self else { return }
+            if self.activeNotificationId == notificationId {
+                self.recentlyUnlocked = nil
+                self.showNextNotification()
+            }
+        }
+    }
+
+    private func checkCompletionist() {
+        // Early exit if already unlocked
+        guard achievements.first(where: { $0.achievementID == .completionist })?.isUnlocked == false else {
+            return
+        }
+        
+        let unlockedCount = achievements.filter { $0.isUnlocked && $0.achievementID != .completionist }.count
+        let totalCount = achievements.count - 1
+        
         if unlockedCount == totalCount {
-            unlockAchievement("completionist")
+            unlockAchievement(.completionist)
         }
     }
 
@@ -152,7 +184,9 @@ class AchievementsManager: ObservableObject {
 
             if daysDiff == 1 {
                 consecutiveDays += 1
-            } else if daysDiff > 1 {
+            } else if daysDiff == 0 {
+
+            } else {
                 consecutiveDays = 1
             }
         } else {
@@ -164,9 +198,11 @@ class AchievementsManager: ObservableObject {
         // 1. Perfect Score Check
         if score == 100 {
             perfectScoreDays += 1
-            if achievements.first(where: { $0.id == "perfect_score" })?.isUnlocked == false {
-                unlockAchievement("perfect_score")
+            if !isUnlocked(.perfectScore) {
+                unlockAchievement(.perfectScore)
             }
+        } else {
+            perfectScoreDays = 0
         }
 
         if score >= 90 {
@@ -176,33 +212,33 @@ class AchievementsManager: ObservableObject {
         }
 
         // 2. First Scan Check
-        if consecutiveDays == 1 && achievements.first(where: { $0.id == "first_scan" })?.isUnlocked == false {
-            unlockAchievement("first_scan")
+        if consecutiveDays == 1 && !isUnlocked(.firstScan) {
+            unlockAchievement(.firstScan)
         }
 
         // 3. Week Streak Check
-        if consecutiveDays >= 7 && achievements.first(where: { $0.id == "week_streak" })?.isUnlocked == false {
-            unlockAchievement("week_streak")
+        if consecutiveDays >= 7 && !isUnlocked(.weekStreak) {
+            unlockAchievement(.weekStreak)
         }
 
         // 4. Month Streak Check
-        if consecutiveDays >= 30 && achievements.first(where: { $0.id == "month_streak" })?.isUnlocked == false {
-            unlockAchievement("month_streak")
+        if consecutiveDays >= 30 && !isUnlocked(.monthStreak) {
+            unlockAchievement(.monthStreak)
         }
 
         // 5. Hundred Days Check
-        if consecutiveDays >= 100 && achievements.first(where: { $0.id == "hundred_days" })?.isUnlocked == false {
-            unlockAchievement("hundred_days")
+        if consecutiveDays >= 100 && !isUnlocked(.hundredDays) {
+            unlockAchievement(.hundredDays)
         }
 
         // 6. Perfect Week Check (Quality Streaks)
-        if highScoreDays >= 7 && achievements.first(where: { $0.id == "perfect_week" })?.isUnlocked == false {
-            unlockAchievement("perfect_week")
+        if highScoreDays >= 7 && !isUnlocked(.perfectWeek) {
+            unlockAchievement(.perfectWeek)
         }
 
         // 7. Perfect Month Check (Quality Streaks)
-        if highScoreDays >= 30 && achievements.first(where: { $0.id == "perfect_month" })?.isUnlocked == false {
-            unlockAchievement("perfect_month")
+        if highScoreDays >= 30 && !isUnlocked(.perfectMonth) {
+            unlockAchievement(.perfectMonth)
         }
 
         saveStats()
@@ -212,7 +248,7 @@ class AchievementsManager: ObservableObject {
         componentsViewed.insert(componentId)
 
         if componentsViewed.count >= ComponentIdentifier.allCases.count {
-            unlockAchievement("all_components")
+            unlockAchievement(.allComponents)
         }
         saveStats()
     }
@@ -221,17 +257,23 @@ class AchievementsManager: ObservableObject {
         themesUsed.insert(themeId)
 
         if themesUsed.count >= 5 {
-            unlockAchievement("theme_collector")
+            unlockAchievement(.themeCollector)
         }
 
         saveStats()
     }
 
     func trackBiometricTest() {
+        let now = Date()
+
+        // Only count if at least 5 min since last test
+        if let last = lastBiometricTest, now.timeIntervalSince(last) < 300 {
+            return
+        }
         biometricTests += 1
 
         if biometricTests >= 10 {
-            unlockAchievement("biometric_ace")
+            unlockAchievement(.biometricAce)
         }
 
         saveStats()
@@ -241,15 +283,15 @@ class AchievementsManager: ObservableObject {
         trendsViews += 1
 
         if trendsViews >= 30 {
-            unlockAchievement("trend_watcher")
+            unlockAchievement(.trendWatcher)
         }
 
         saveStats()
     }
 
     func trackVPNConfirmed() {
-        if !achievements.first(where: { $0.id == "vpn_confirmed" })!.isUnlocked {
-            unlockAchievement("vpn_confirmed")
+        if !isUnlocked(.vpnConfirmed) {
+            unlockAchievement(.vpnConfirmed)
         }
     }
 
@@ -259,7 +301,7 @@ class AchievementsManager: ObservableObject {
         withAnimation(.spring()) {
             self.selectedBadge = achievement
         }
-        UserDefaults.standard.set(achievement.id, forKey: "selectedBadge")
+        UserDefaults.standard.set(achievement.achievementID.rawValue, forKey: "selectedBadge")
 
         objectWillChange.send()
         Haptic.tap()
@@ -286,5 +328,9 @@ class AchievementsManager: ObservableObject {
 
     var completionPercentage: Double {
         Double(unlockedCount) / Double(totalCount)
+    }
+
+    func isUnlocked(_ achievementID: AchievementID) -> Bool {
+        achievements.first(where: { $0.achievementID == achievementID })?.isUnlocked ?? false
     }
 }

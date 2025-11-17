@@ -20,7 +20,7 @@ struct SettingsSectionView: View {
             Text("Settings")
                 .font(.headline)
                 .fontWeight(.semibold)
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
 
             VStack(spacing: 12) {
                 // Pro Status / Upgrade Card
@@ -44,7 +44,6 @@ struct SettingsSectionView: View {
                 DebugSection()
 #endif
             }
-
         }
         .alert("Clear All Data?", isPresented: $showClearDataConfirmation) {
             Button("Cancel", role: .cancel) {}

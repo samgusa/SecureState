@@ -63,11 +63,11 @@ struct DeviceBiometricTestView: View {
             if detector.biometricTestPassed {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(themeManager.currentTheme.successColor)
+                        .themedForeground(themeManager.currentTheme.successColor)
 
                     Text("\(detector.biometricTypeString) test passed!")
                         .fontWeight(.medium)
-                        .foregroundStyle(themeManager.currentTheme.successColor)
+                        .themedForeground(themeManager.currentTheme.successColor)
                 }
                 .padding()
                 .background(themeManager.currentTheme.successColor.opacity(0.1))

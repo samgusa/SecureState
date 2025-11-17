@@ -20,7 +20,7 @@ struct AppleReleaseCycleInfo: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "calendar")
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
 
                 Text("Apple's Update Schedule")
                     .font(.headline)

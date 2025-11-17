@@ -18,30 +18,17 @@ struct UniversalCard: View {
         case toggle(Binding<Bool>)
     }
 
-    let icon: String
     let title: String
-    let subtitle: String?
     var style: Style
     
     var body: some View {
         Button(action: buttonAction) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    if !icon.isEmpty {
-                        Image(systemName: icon)
-                            .font(.title2)
-                            .foregroundStyle(iconColor)
-                            .frame(width: 24)
-                    }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title)
                             .font(.subheadline)
                             .fontWeight(.medium)
-                        if let subtitle = subtitle, !subtitle.isEmpty {
-                            Text(subtitle)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
                     }
                     Spacer()
                     trailingContent
@@ -66,20 +53,22 @@ struct UniversalCard: View {
             Text("\(score)/\(maxScore)")
                 .contentTransition(.numericText())
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         case .action(_, let isRecommended):
             HStack(spacing: 4) {
                 if isRecommended {
                     Text("Recommended")
                         .font(.caption2)
                         .fontWeight(.medium)
-                        .foregroundColor(.white)
+                        .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(iconColor)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
-                Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         case .toggle(let binding):
             Toggle("", isOn: binding)
@@ -145,18 +134,16 @@ struct ThemedProgressBar: View {
     let height: CGFloat
 
     init(progress: Double, color: Color, height: CGFloat = 8) {
-            self.progress = progress
-            self.color = color
-            self.height = height
-        }
+        self.progress = progress
+        self.color = color
+        self.height = height
+    }
 
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: height / 2)
-                    .fill(colorScheme == .dark ?
-                          Color(.systemGray5).opacity(0.5) :
-                            Color(.systemGray4).opacity(0.4))
+                    .fill(Color(.systemGray3).opacity(0.5))
                     .frame(height: height)
 
                 RoundedRectangle(cornerRadius: height / 2)
@@ -197,9 +184,7 @@ struct ThemedProgressBar: View {
         freeProManager.isPro = false  // not pro
 
         return UniversalCard(
-                icon: "shield",
                 title: "Device",
-                subtitle: "",
                 style: .score(8, 10, .green, {
                     withAnimation(.spring()) {
 
@@ -231,9 +216,7 @@ struct ThemedProgressBar: View {
         let proManager = ProStatusManager(storeManager: mockStoreManager, debug: true)
 
         return UniversalCard(
-                icon: "shield",
                 title: "Device",
-                subtitle: "",
                 style: .score(8, 10, .green, {
                     withAnimation(.spring()) {
 

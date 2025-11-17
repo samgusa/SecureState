@@ -145,12 +145,12 @@ struct EnvironmentalSecurityAssessmentView: View {
                         } else {
                             Text("Trust level unknown - confirmation needed")
                                 .font(.caption)
-                                .foregroundStyle(themeManager.currentTheme.warningColor)
+                                .themedForeground(themeManager.currentTheme.warningColor)
                         }
                     } else {
                         Text("Private encrypted connection through carrier")
                             .font(.caption)
-                            .foregroundStyle(themeManager.currentTheme.successColor)
+                            .themedForeground(themeManager.currentTheme.successColor)
                     }
                 }
                 Spacer()
@@ -191,12 +191,12 @@ struct EnvironmentalSecurityAssessmentView: View {
             Text("Network Scoring (0-15 points)")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
 
             VStack(spacing: 6) {
                 HStack {
                     Image(systemName: "antenna.radiowaves.left.and.right")
-                        .foregroundStyle(themeManager.currentTheme.successColor)
+                        .themedForeground(themeManager.currentTheme.successColor)
                         .frame(width: 20)
                     Text("Cellular Connection")
                         .font(.caption)
@@ -204,12 +204,12 @@ struct EnvironmentalSecurityAssessmentView: View {
                     Text("15 pts")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(themeManager.currentTheme.successColor)
+                        .themedForeground(themeManager.currentTheme.successColor)
                 }
 
                 HStack {
                     Image(systemName: "wifi")
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
                         .frame(width: 20)
                     Text("Trusted Wi-Fi (home/work)")
                         .font(.caption)
@@ -217,12 +217,12 @@ struct EnvironmentalSecurityAssessmentView: View {
                     Text("12 pts")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
                 }
 
                 HStack {
                     Image(systemName: "wifi")
-                        .foregroundStyle(themeManager.currentTheme.warningColor)
+                        .themedForeground(themeManager.currentTheme.warningColor)
                         .frame(width: 20)
                     Text("Unknown Wi-Fi")
                         .font(.caption)
@@ -230,12 +230,12 @@ struct EnvironmentalSecurityAssessmentView: View {
                     Text("8 pts")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(themeManager.currentTheme.warningColor)
+                        .themedForeground(themeManager.currentTheme.warningColor)
                 }
 
                 HStack {
                     Image(systemName: "wifi")
-                        .foregroundStyle(themeManager.currentTheme.dangerColor)
+                        .themedForeground(themeManager.currentTheme.dangerColor)
                         .frame(width: 20)
                     Text("Public Wi-Fi (confirmed)")
                         .font(.caption)
@@ -243,7 +243,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                     Text("3 pts")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(themeManager.currentTheme.dangerColor)
+                        .themedForeground(themeManager.currentTheme.dangerColor)
                 }
             }
         }
@@ -426,7 +426,7 @@ struct EnvironmentalSecurityAssessmentView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "lightbulb.fill")
-                    .foregroundStyle(themeManager.currentTheme.warningColor)
+                    .themedForeground(themeManager.currentTheme.warningColor)
                 Text("Network Security Tips")
                     .font(.subheadline)
                     .fontWeight(.semibold)
@@ -446,7 +446,7 @@ struct EnvironmentalSecurityAssessmentView: View {
     private func tipRow(_ text: String, icon: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: icon)
-                .foregroundStyle(themeManager.currentTheme.warningColor)
+                .themedForeground(themeManager.currentTheme.warningColor)
                 .font(.caption)
                 .frame(width: 16)
 
@@ -494,7 +494,7 @@ struct EnvironmentalSecurityAssessmentView: View {
             if let currentEnv = detector.environmentType {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(themeManager.currentTheme.successColor)
+                        .themedForeground(themeManager.currentTheme.successColor)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Current Selection:")
@@ -562,7 +562,7 @@ struct EnvironmentalSecurityAssessmentView: View {
 
                             if detector.environmentType == environment {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(themeManager.currentTheme.successColor)
+                                    .themedForeground(themeManager.currentTheme.successColor)
                             } else {
                                 Text("+\(environment.scoreModifier)")
                                     .font(.caption)
@@ -647,7 +647,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                 ForEach(detector.getRecommendationsForCurrentScore(), id: \.self) { recommendation in
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lightbulb.fill")
-                            .foregroundStyle(themeManager.currentTheme.warningColor)
+                            .themedForeground(themeManager.currentTheme.warningColor)
                             .font(.caption)
 
                         Text(recommendation)
@@ -678,7 +678,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                     Text("Back to Location")
                         .fontWeight(.medium)
                 }
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(themeManager.currentTheme.primary.opacity(0.1))
@@ -725,7 +725,7 @@ struct EnvironmentalSecurityAssessmentView: View {
                         Text("Back to Network")
                             .fontWeight(.medium)
                     }
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(themeManager.currentTheme.primary.opacity(0.1))

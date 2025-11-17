@@ -37,12 +37,12 @@ struct EnvironmentLocationMapView: View {
 
                     Text(snapshot.detectedInfo.displayName)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     if !snapshot.detectedInfo.detailDescription.isEmpty {
                         Text(snapshot.detectedInfo.detailDescription)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -52,15 +52,15 @@ struct EnvironmentLocationMapView: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("±\(Int(snapshot.accuracy))m")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     if snapshot.isAccurate {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(themeManager.currentTheme.successColor)
+                            .foregroundStyle(themeManager.currentTheme.successColor)
                             .font(.caption)
                     } else {
                         Image(systemName: "exclamationmark.circle.fill")
-                            .foregroundColor(themeManager.currentTheme.warningColor)
+                            .foregroundStyle(themeManager.currentTheme.warningColor)
                             .font(.caption)
                     }
                 }
@@ -117,12 +117,12 @@ struct EnvironmentLocationMapView: View {
 
                             Image(systemName: "eye.slash.fill")
                                 .font(.title2)
-                                .foregroundColor(.primary)
+                                .foregroundStyle(.primary)
 
                             Text("Press & Hold to Reveal")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(.primary)
+                                .foregroundStyle(.primary)
 
                             // Subtle indication of map content beneath
                             Text("Street map ready")

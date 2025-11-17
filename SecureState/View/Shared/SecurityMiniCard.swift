@@ -28,7 +28,7 @@ struct SecurityMiniCard: View {
                     Spacer()
                     Text("\(score)/\(maxScore)")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {

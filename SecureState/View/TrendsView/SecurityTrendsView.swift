@@ -109,7 +109,7 @@ struct SecurityTrendsView: View {
             case .vulnerabilities: return themeManager.currentTheme.accent
             case .critical: return themeManager.currentTheme.dangerColor
             case .high: return themeManager.currentTheme.warningColor
-            case .medium: return .yellow
+            case .medium: return .yellow.adjustedForText(colorScheme: .dark)
             }
         }
 
@@ -343,7 +343,7 @@ struct SecurityTrendsView: View {
                     Text("Global Threat Landscape")
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
 
                     if let lastUpdate = trendsManager.lastUpdateDate {
                         HStack(spacing: 4) {
@@ -377,7 +377,7 @@ struct SecurityTrendsView: View {
                     }) {
                         Image(systemName: "arrow.clockwise")
                             .font(.title3)
-                            .foregroundStyle(themeManager.currentTheme.primary)
+                            .themedForeground(themeManager.currentTheme.primary)
                             .rotationEffect(.degrees(trendsManager.isLoading ? 360 : 0))
                             .animation(.linear(duration: 1).repeatCount(trendsManager.isLoading ? 100 : 1, autoreverses: false), value: trendsManager.isLoading)
                     }
@@ -387,7 +387,7 @@ struct SecurityTrendsView: View {
                 if let error = trendsManager.errorMessage {
                     HStack {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(themeManager.currentTheme.warningColor)
+                            .themedForeground(themeManager.currentTheme.warningColor)
                         Text(error)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -550,7 +550,7 @@ struct SecurityTrendsView: View {
                     }
                 }
             }
-            .foregroundStyle(themeManager.currentTheme.primary)
+            .themedForeground(themeManager.currentTheme.primary)
         }
         .padding()
         .cardStyle()

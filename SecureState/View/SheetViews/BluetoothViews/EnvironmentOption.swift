@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct EnvironmentOption: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let safety: EnhancedBluetoothSecurityDetector.EnvironmentSafety
     let title: String
     let description: String
@@ -34,7 +35,7 @@ struct EnvironmentOption: View {
                     Text(title)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundStyle(.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
 
                     Text(description)
                         .font(.caption)
@@ -46,7 +47,7 @@ struct EnvironmentOption: View {
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .themedForeground(themeManager.currentTheme.successColor)
                 } else {
                     Circle()
                         .stroke(Color(.systemGray3), lineWidth: 1)
@@ -68,6 +69,7 @@ struct EnvironmentOption: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     EnvironmentOption(
         safety: .safe,
         title: "Safe",
@@ -77,6 +79,7 @@ struct EnvironmentOption: View {
         isSelected: false,
         onSelect: {  }
     )
+    .environmentObject(mockThemeManager)
     EnvironmentOption(
         safety: .caution,
         title: "Cautious",
@@ -86,6 +89,7 @@ struct EnvironmentOption: View {
         isSelected: true,
         onSelect: {  }
     )
+    .environmentObject(mockThemeManager)
     EnvironmentOption(
         safety: .unsafe,
         title: "Unsafe",
@@ -95,4 +99,5 @@ struct EnvironmentOption: View {
         isSelected: false,
         onSelect: {  }
     )
+    .environmentObject(mockThemeManager)
 }

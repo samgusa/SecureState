@@ -40,7 +40,7 @@ struct TipCard: View {
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .multilineTextAlignment(.leading)
-                            .foregroundStyle(themeManager.currentTheme.primary)
+                            .themedForeground(themeManager.currentTheme.primary)
                     }
 
                     if let category = tip.category {

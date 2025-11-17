@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct ComponentCard: View {
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var proManager: ProStatusManager
     @EnvironmentObject var achievementsManager: AchievementsManager
@@ -43,9 +44,9 @@ struct ComponentCard: View {
                         // Attention Indicator
                         if needsAttention {
                             Image(systemName: "exclamationmark.circle.fill")
-                                .foregroundStyle(themeManager.currentTheme.warningColor)
+                                .themedForeground(themeManager.currentTheme.warningColor)
                                 .font(.caption)
-                                .background(Color.white)
+                                .background(colorScheme == .dark ? Color.black : Color.white)
                                 .clipShape(Circle())
                                 .offset(x: 8, y: -8)
                                 .scaleEffect(pulseAnimation ? 1.2 : 1.0)
@@ -66,7 +67,7 @@ struct ComponentCard: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .multilineTextAlignment(.leading)
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
 
                 // Progress bar
                 ThemedProgressBar(
@@ -78,6 +79,13 @@ struct ComponentCard: View {
             .padding()
             .background(needsAttention ? themeManager.currentTheme.warningColor.opacity(0.05) : Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        needsAttention ? themeManager.currentTheme.warningColor.opacity(0.3) : Color(.secondarySystemBackground),
+                        lineWidth: 1
+                    )
+            }
             .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
         }
         .buttonStyle(PlainButtonStyle())
@@ -87,6 +95,7 @@ struct ComponentCard: View {
             }
         }
         .sheet(isPresented: $showConfirmationSheet) {
+            achievementsManager.trackComponentViewed(component.identifier.rawValue)
         } content: {
             let config = ComponentConfiguration.create(
                 for: component,

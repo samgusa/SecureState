@@ -35,7 +35,9 @@ struct FloatingTabBarView: View {
                             Text(tab.title)
                                 .font(.caption2)
                         }
-                        .foregroundStyle(selectedTab == tab ? themeManager.currentTheme.primary : themeManager.currentTheme.primary.opacity(0.5))
+                        .themedForeground(
+                            selectedTab == tab ? themeManager.currentTheme.primary : themeManager.currentTheme.primary.opacity(0.5)
+                        )
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                     }

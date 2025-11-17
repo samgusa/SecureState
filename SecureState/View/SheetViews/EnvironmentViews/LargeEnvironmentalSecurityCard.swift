@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct LargeEnvironmentalSecurityCard: View {
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var themeManager: ThemeManager
     let component: SecurityComponent
     let needsAttention: Bool
@@ -35,9 +36,9 @@ struct LargeEnvironmentalSecurityCard: View {
 
                         if needsAttention {
                             Image(systemName: "exclamationmark.circle.fill")
-                                .foregroundStyle(themeManager.currentTheme.warningColor)
+                                .themedForeground(themeManager.currentTheme.warningColor)
                                 .font(.caption)
-                                .background(Color.white)
+                                .background(colorScheme == .dark ? Color.black : Color.white)
                                 .clipShape(Circle())
                                 .offset(x: 16, y: -16)
                                 .scaleEffect(pulseAnimation ? 1.2 : 1.0)
@@ -65,7 +66,7 @@ struct LargeEnvironmentalSecurityCard: View {
                 // Title and description
                 VStack(alignment: .leading, spacing: 8) {
                     Text(component.name)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
                         .font(.headline)
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.leading)
@@ -121,10 +122,6 @@ struct LargeEnvironmentalSecurityCard: View {
         }
     }
 }
-
-/*
-
- */
 
 #Preview {
     let mockThemeManager = ThemeManager()

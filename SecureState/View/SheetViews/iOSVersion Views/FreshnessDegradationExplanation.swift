@@ -20,7 +20,7 @@ struct FreshnessDegradationExplanation: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "clock.arrow.circlepath")
-                    .foregroundStyle(themeManager.currentTheme.warningColor)
+                    .themedForeground(themeManager.currentTheme.warningColor)
 
                 Text("How Freshness Scoring Works")
                     .font(.headline)

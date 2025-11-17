@@ -49,11 +49,11 @@ struct ScreenRecordingStatusView: View {
                 if hasTestedFeature {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(themeManager.currentTheme.successColor)
+                            .themedForeground(themeManager.currentTheme.successColor)
                         Text("Feature tested successfully!")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                            .foregroundStyle(themeManager.currentTheme.successColor)
+                            .themedForeground(themeManager.currentTheme.successColor)
                     }
                     .padding()
                     .background(themeManager.currentTheme.successColor.opacity(0.1))

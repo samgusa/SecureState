@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct OverviewView: View {
-
+    @EnvironmentObject var themeManager: ThemeManager
     @Binding var deviceScore: Double
     let maxDeviceScore: Double
     var devicePercentage: Double
@@ -23,12 +23,11 @@ struct OverviewView: View {
             Text("Security Summary")
                 .font(.headline)
                 .fontWeight(.semibold)
+                .themedForeground(themeManager.currentTheme.primary)
 
             HStack(spacing: 16) {
                 UniversalCard(
-                    icon: "",
                     title: "Device",
-                    subtitle: "",
                     style: .score(Int(deviceScore), Int(maxDeviceScore), scoreColors[0], {
                         withAnimation(.spring()) {
                             selectedSection = .device
@@ -37,9 +36,7 @@ struct OverviewView: View {
                 )
 
                 UniversalCard(
-                    icon: "",
                     title: "Situational",
-                    subtitle: "",
                     style: .score(Int(situationalScore), Int(maxSituationalScore), scoreColors[1], {
                         withAnimation(.spring()) {
                             selectedSection = .situational
@@ -52,6 +49,7 @@ struct OverviewView: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     OverviewView(
         deviceScore: .constant(22),
         maxDeviceScore: 55,
@@ -62,4 +60,5 @@ struct OverviewView: View {
         scoreColors: [.red, .green],
         selectedSection: .constant(.device)
     )
+    .environmentObject(mockThemeManager)
 }

@@ -103,7 +103,7 @@ struct ComponentConfirmationSheet: View {
                 Text(config.title)
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
 
                 HStack(spacing: 16) {
                     // Current Score

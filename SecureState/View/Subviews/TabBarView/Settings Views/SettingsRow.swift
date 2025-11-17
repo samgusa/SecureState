@@ -29,7 +29,7 @@ struct SettingsRow: View {
                 Text(title)
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
 
                 Text(subtitle)
                     .font(.caption)

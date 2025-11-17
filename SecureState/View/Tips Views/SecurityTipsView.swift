@@ -58,7 +58,7 @@ struct SecurityTipsView: View {
                     Text("Security Tips")
                         .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
 
                     Text("Practical advice for everyday digital security")
                         .font(.subheadline)
@@ -70,7 +70,7 @@ struct SecurityTipsView: View {
             HStack {
                 Label("\(tipsManager.allTips.count) Tips", systemImage: "shield.fill")
                     .font(.caption)
-                    .foregroundStyle(themeManager.currentTheme.accent)
+                    .themedForeground(themeManager.currentTheme.accent)
 
                 Spacer()
 
@@ -86,12 +86,12 @@ struct SecurityTipsView: View {
             // Header
             HStack {
                 Image(systemName: "star.fill")
-                    .foregroundStyle(themeManager.currentTheme.warningColor)
+                    .themedForeground(themeManager.currentTheme.warningColor)
 
                 Text("Tip of the Day")
                     .font(.headline)
                     .fontWeight(.bold)
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
 
                 Spacer()
             }
@@ -116,7 +116,7 @@ struct SecurityTipsView: View {
             Text(tip.title)
                 .font(.title3)
                 .fontWeight(.semibold)
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
 
             // Description
             Text(tip.description)
@@ -168,7 +168,7 @@ struct SecurityTipsView: View {
                     .fontWeight(.bold)
                     .foregroundStyle(.secondary)
             }
-            .foregroundStyle(themeManager.currentTheme.primary)
+            .themedForeground(themeManager.currentTheme.primary)
             .padding()
             .background(
                 themeManager.currentTheme.accent.opacity(

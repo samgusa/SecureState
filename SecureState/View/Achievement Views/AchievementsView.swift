@@ -136,7 +136,7 @@ struct AchievementsView: View {
                     Text("Collection Progress")
                         .font(.headline)
                         .fontWeight(.semibold)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
 
                     Text("\(manager.unlockedCount) of \(manager.totalCount) unlocked")
                         .font(.subheadline)
@@ -244,10 +244,6 @@ struct AchievementsView: View {
         }
     }
 }
-
-//#Preview {
-//    AchievementsView(manager: AchievementsManager())
-//}
 
 #Preview("Free User") {
     // We wrap setup code in a closure that returns the view.

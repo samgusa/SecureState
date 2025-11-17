@@ -76,6 +76,7 @@ struct SScoreView: View {
                             score: Int(situationalScore),
                             maxScore: Int(maxSituationalScore),
                             isSelected: selectedSection == .situational,
+                            textColor: situationalGradient,
                             animate: $animateScore,
                             delay: 0.9
                         )
@@ -94,6 +95,7 @@ struct SScoreView: View {
                             score: Int(deviceScore),
                             maxScore: Int(maxDeviceScore),
                             isSelected: selectedSection == .device,
+                            textColor: deviceGradient,
                             animate: $animateScore,
                             delay: 0.9
                         )

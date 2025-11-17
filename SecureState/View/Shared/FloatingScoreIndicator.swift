@@ -12,19 +12,20 @@ struct FloatingScoreIndicator: View {
     let score: Int
     let maxScore: Int
     let isSelected: Bool
+    var textColor: LinearGradient
     @Binding var animate: Bool
     let delay: Double
 
     var body: some View {
         VStack(spacing: 4) {
             Text("\(score)")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundColor(scoreColor)
+                .font(.system(size: isSelected ? 18 : 16, weight: isSelected ? .bold : .semibold, design: .rounded))
+                .foregroundStyle(textColor)
                 .monospacedDigit() // Prevents number width changes during animation
 
             Text("/\(maxScore)")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -56,6 +57,7 @@ struct FloatingScoreIndicator: View {
         score: 15,
         maxScore: 20,
         isSelected: true,
+        textColor: LinearGradient(colors: [.gray, Color.gray.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing),
         animate: .constant(false),
         delay: 1.0
     )

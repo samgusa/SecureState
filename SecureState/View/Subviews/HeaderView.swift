@@ -27,7 +27,7 @@ struct HeaderView: View {
                     Text("How Secure are you right now?")
                         .font(.title2)
                         .fontWeight(.semibold)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
 
                     HStack {
                         Image(systemName: securityStatusIcon)
@@ -95,7 +95,9 @@ struct HeaderView: View {
                     Text("Action needed")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(
+                            themeManager.currentTheme.dangerColor.contrastingTextColor()
+                        )
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(themeManager.currentTheme.dangerColor)

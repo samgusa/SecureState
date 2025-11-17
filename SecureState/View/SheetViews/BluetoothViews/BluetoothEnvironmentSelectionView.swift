@@ -18,7 +18,7 @@ struct BluetoothEnvironmentSelectionView: View {
             Text("How safe does this Bluetooth environment feel?")
                 .font(.headline)
                 .fontWeight(.semibold)
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
 
             VStack(spacing: 8) {
                 EnvironmentOption(
@@ -62,7 +62,7 @@ struct BluetoothEnvironmentSelectionView: View {
             if !detector.nearbyDevices.isEmpty {
                 HStack {
                     Image(systemName: "info.circle")
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
 
                     Text("Your selection adjusts the security score based on your trust level of the current environment.")
                         .font(.caption)

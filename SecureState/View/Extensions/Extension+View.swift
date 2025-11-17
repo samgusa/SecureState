@@ -9,11 +9,11 @@ import Foundation
 import SwiftUI
 
 extension View {
-    func themedBackground(_ opacity: Double = 0.05) -> some View {
-        self.modifier(ThemedBackgroundModifier(opacity: opacity))
+    func themedBackground(_ opacity: Double = 0.05, _ borderOpacity: Double = 0.3) -> some View {
+        self.modifier(ThemedBackgroundModifier(opacity: opacity, borderOpacity: borderOpacity))
     }
 
-    func cardStyle(_ strokeColor: Color = .primary, _ opacity: Double = 0.25) -> some View {
+    func cardStyle(_ strokeColor: Color = .primary, _ opacity: Double = 0.35) -> some View {
         self
             .background(Color(.secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12))

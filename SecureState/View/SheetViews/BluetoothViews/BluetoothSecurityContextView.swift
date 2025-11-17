@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct BluetoothSecurityContextView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var detector: EnhancedBluetoothSecurityDetector
     let onSelection: (EnhancedBluetoothSecurityDetector.EnvironmentSafety) -> Void
 
@@ -41,12 +42,12 @@ struct BluetoothSecurityContextView: View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.shield.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(.green)
+                .themedForeground(themeManager.currentTheme.successColor)
 
             Text("Maximum Security")
                 .font(.headline)
                 .fontWeight(.semibold)
-                .foregroundStyle(.green)
+                .themedForeground(themeManager.currentTheme.successColor)
 
             Text("Bluetooth is disabled, providing the highest level of security against Bluetooth-based threats.")
                 .font(.subheadline)
@@ -62,7 +63,7 @@ struct BluetoothSecurityContextView: View {
         VStack(spacing: 12) {
             Image(systemName: "antenna.radiowaves.left.and.right")
                 .font(.system(size: 48))
-                .foregroundStyle(.blue)
+                .themedForeground(themeManager.currentTheme.primary)
 
             Text("Ready to Scan")
                 .font(.headline)
@@ -82,12 +83,12 @@ struct BluetoothSecurityContextView: View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(.green)
+                .themedForeground(themeManager.currentTheme.successColor)
 
             Text("No Device Found")
                 .font(.headline)
                 .fontWeight(.semibold)
-                .foregroundStyle(.green)
+                .themedForeground(themeManager.currentTheme.successColor)
 
             Text("No Bluetooth devices were discovered in your immediate area. This indicates a relatively secure environment.")
                 .font(.subheadline)
@@ -114,8 +115,10 @@ struct BluetoothSecurityContextView: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     BluetoothSecurityContextView(
         detector: .init(),
         onSelection: { _ in }
     )
+    .environmentObject(mockThemeManager)
 }

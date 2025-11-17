@@ -16,7 +16,7 @@ struct DeviceLockStatusView: View {
             Text("Device Security Status")
                 .font(.headline)
                 .fontWeight(.medium)
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
 
             VStack(spacing: 12) {
                 statusCard(
@@ -64,7 +64,7 @@ struct DeviceLockStatusView: View {
     private func infoBox(_ text: String, themeManager: ThemeManager) -> some View {
         HStack(spacing: 8) {
             Image(systemName: "info.circle.fill")
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
 
             Text(text)
                 .font(.caption)

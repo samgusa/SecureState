@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ThemePickerView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var proManager: ProStatusManager
+    @EnvironmentObject var achievementsManager: AchievementsManager
     @Environment(\.dismiss) var dismiss
 
     let columns = [
@@ -66,7 +68,7 @@ struct ThemePickerView: View {
 
                 Image(systemName: "paintpalette.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white)
             }
             Text("Custom Color Themes")
                 .font(.title2)
@@ -97,6 +99,7 @@ struct ThemePickerView: View {
                     theme: theme,
                     isSelected: themeManager.currentTheme == theme) {
                         themeManager.setTheme(theme)
+                        achievementsManager.trackThemeUsed(theme.rawValue)
                     }
                     .id(theme.rawValue)
 
@@ -111,7 +114,15 @@ struct ThemePickerView: View {
 
 #Preview("Free User") {
     // We wrap setup code in a closure that returns the view.
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
     let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
         let mockThemeManager = ThemeManager()
         let mockStoreManager = EnhancedStoreManager()
         let freeProManager = ProStatusManager(storeManager: mockStoreManager)
@@ -120,12 +131,21 @@ struct ThemePickerView: View {
         return ThemePickerView()
             .environmentObject(mockThemeManager)
             .environmentObject(freeProManager)
+            .environmentObject(achievementManager)
     }()
     return view
 }
 
 #Preview("Pro User") {
+    let container: ModelContainer = {
+        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return container
+    }()
+
     let view: some View = {
+        let achievementManager = AchievementsManager(modelContext: container.mainContext)
         let mockThemeManager = ThemeManager()
         let mockStoreManager = EnhancedStoreManager()
         let proManager = ProStatusManager(storeManager: mockStoreManager, debug: true)
@@ -133,6 +153,7 @@ struct ThemePickerView: View {
         return ThemePickerView()
             .environmentObject(mockThemeManager)
             .environmentObject(proManager)
+            .environmentObject(achievementManager)
     }()
     return view
 }

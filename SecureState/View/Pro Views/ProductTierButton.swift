@@ -40,7 +40,7 @@ struct ProductTierButton: View {
 
                             if isPurchased {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(themeManager.currentTheme.successColor)
+                                    .themedForeground(themeManager.currentTheme.successColor)
                                     .font(.subheadline)
                             }
                         }

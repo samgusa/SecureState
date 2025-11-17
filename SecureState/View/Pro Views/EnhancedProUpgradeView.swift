@@ -49,7 +49,7 @@ struct EnhancedProUpgradeView: View {
                         } label: {
                             Text("Manage Subscription")
                                 .font(.subheadline)
-                                .foregroundStyle(themeManager.currentTheme.primary)
+                                .themedForeground(themeManager.currentTheme.primary)
                         }
                     }
 
@@ -168,7 +168,7 @@ struct EnhancedProUpgradeView: View {
         } label: {
             Text("Restore Purchases")
                 .font(.subheadline)
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
         }
     }
 

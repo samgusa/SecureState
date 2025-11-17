@@ -16,7 +16,7 @@ struct EducationRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .foregroundStyle(themeManager.currentTheme.primary)
+                .themedForeground(themeManager.currentTheme.primary)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 4) {

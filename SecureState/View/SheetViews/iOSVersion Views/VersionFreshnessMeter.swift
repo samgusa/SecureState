@@ -70,7 +70,7 @@ struct VersionFreshnessMeter: View {
                 if daysSinceConfirmation > 90 {
                     Text("Consider checking for updates - score degrades over time")
                         .font(.caption)
-                        .foregroundStyle(themeManager.currentTheme.warningColor)
+                        .themedForeground(themeManager.currentTheme.warningColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(themeManager.currentTheme.warningColor.opacity(0.1))

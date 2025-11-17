@@ -48,7 +48,7 @@ struct iOSVersionStatusView: View {
                     Text("Current Version")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
 
                     Spacer()
 

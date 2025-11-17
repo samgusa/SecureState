@@ -36,36 +36,36 @@ struct EnvironmentLocationDetectionStatusView: View {
                         detector.performLocationSnapshot()
                     }
                     .font(.caption)
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
                 } else {
                     Button("Enable Location") {
                         detector.requestLocationPermission()
                     }
                     .font(.caption)
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
                 }
             }
             
             if let suggestion = detector.smartSuggestion {
                 HStack {
                     Image(systemName: "arrow.clockwise.circle.fill")
-                        .foregroundStyle(themeManager.currentTheme.primary)
-                    
+                        .themedForeground(themeManager.currentTheme.primary)
+
                     Text("Suggestion: \(suggestion.displayName)")
                         .font(.subheadline)
-                        .foregroundStyle(themeManager.currentTheme.primary)
-                    
+                        .themedForeground(themeManager.currentTheme.primary)
+
                     Spacer()
                     
                     Button("Use") {
                         detector.selectEnvironmentType(suggestion)
                     }
                     .font(.caption)
-                    .foregroundStyle(themeManager.currentTheme.primary)
+                    .themedForeground(themeManager.currentTheme.primary)
                 }
                 .padding()
                 .background(themeManager.currentTheme.primary.opacity(0.1))
-                .cornerRadius(8)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
     }

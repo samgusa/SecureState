@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct CicadianSecurityClockView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var detector: TimeBasedRiskDetector
-
     @State private var selectedHour: Int?
     @State private var currentTime = Date()
 
@@ -25,6 +25,7 @@ struct CicadianSecurityClockView: View {
                 Text("24-Hour Security Risk Assessment")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .themedForeground(themeManager.currentTheme.primary)
 
                 Text("Tap different times to see risk explanations")
                     .font(.subheadline)
@@ -118,5 +119,7 @@ struct CicadianSecurityClockView: View {
 }
 
 #Preview {
+    let mockThemeManager = ThemeManager()
     CicadianSecurityClockView(detector: TimeBasedRiskDetector())
+        .environmentObject(mockThemeManager)
 }

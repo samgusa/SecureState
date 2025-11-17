@@ -13,7 +13,6 @@ struct TrafficSimulatorCanvas: View {
     @Binding var isSimulating: Bool
     @Binding var animatingPackets: [VPNTrafficSimulatorView.PacketAnimation]
     @Binding var interceptedData: [String]
-    // UPDATE
     @Binding var packetProgress: [UUID: Double]
 
 
@@ -35,7 +34,7 @@ struct TrafficSimulatorCanvas: View {
                 VStack {
                     Image(systemName: "iphone")
                         .font(.title)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
                     Text("Your Device")
                         .font(.caption)
                         .fontWeight(.medium)
@@ -46,7 +45,7 @@ struct TrafficSimulatorCanvas: View {
                 VStack {
                     Image(systemName: "server.rack")
                         .font(.title)
-                        .foregroundStyle(themeManager.currentTheme.primary)
+                        .themedForeground(themeManager.currentTheme.primary)
                     Text("Server")
                         .font(.caption)
                         .fontWeight(.medium)

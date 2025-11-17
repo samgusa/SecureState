@@ -26,7 +26,7 @@ struct SimpleCVECard: View {
                             Text(cve.severity == .unknown ? "Pending" : cve.severity.displayName)
                                 .font(.caption2)
                                 .fontWeight(.bold)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(severityColor.contrastingTextColor())
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(severityColor)
@@ -41,7 +41,7 @@ struct SimpleCVECard: View {
                         Text(cve.userFriendlyType)
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundStyle(themeManager.currentTheme.primary)
+                            .themedForeground(themeManager.currentTheme.primary)
 
                         // CVE ID
                         Text(cve.id)
@@ -98,8 +98,8 @@ struct SimpleCVECard: View {
                 }
             }
             .padding()
+            .themedBackground(0.1, 0.2)
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .themedBackground(0.1)
         }
         .buttonStyle(PlainButtonStyle())
     }

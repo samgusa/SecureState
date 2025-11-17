@@ -72,7 +72,7 @@ extension Achievement {
         ),
         Achievement(
             achievementID: .perfectWeek,
-            name: "Flawless Week",
+            name: "Elite Week",
             description: "Maintain 90+ security score for 7 days",
             icon: "star.circle.fill",
             rarity: .epic,
@@ -107,7 +107,7 @@ extension Achievement {
         Achievement(
             achievementID: .perfectMonth,
             name: "Security Grandmaster",
-            description: "Maintain 95+ score for 30 consecutive days",
+            description: "Maintain 90+ score for 30 consecutive days",
             icon: "medal.fill",
             rarity: .legendary,
             category: .mastery

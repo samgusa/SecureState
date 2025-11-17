@@ -44,7 +44,7 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
-            .foregroundStyle(themeManager.currentTheme.primary)
+            .themedForeground(themeManager.currentTheme.primary)
             .frame(maxWidth: .infinity)
             .padding()
             .background(themeManager.currentTheme.primary.opacity(0.1))
@@ -67,7 +67,7 @@ struct ConfirmationButtonStyle: ButtonStyle {
         configuration.label
             .font(.subheadline)
             .fontWeight(.medium)
-            .foregroundColor(selected ? .white : themeManager.currentTheme.primary)
+            .foregroundStyle(selected ? .white : themeManager.currentTheme.primary)
             .padding(.horizontal, 20)
             .padding(.vertical, 8)
             .background(

@@ -94,7 +94,7 @@ enum AppColorTheme: String, CaseIterable, Codable {
                 dark: UIColor(red: 170/255, green: 30/255, blue: 55/255, alpha: 1)) // Crimson
         case .arctic:
             return Color.adaptive(
-                light: UIColor(red: 170/255, green: 210/255, blue: 240/255, alpha: 1),
+                light: UIColor(red: 70/255, green: 130/255, blue: 180/255, alpha: 1),
                 dark: UIColor(red: 100/255, green: 160/255, blue: 200/255, alpha: 1)) // Ice blue
         case .amber:
             return Color.adaptive(

@@ -18,7 +18,7 @@ struct DebugSection: View {
             Text("Debug Settings")
                 .font(.headline)
                 .fontWeight(.semibold)
-                .foregroundStyle(themeManager.currentTheme.dangerColor)
+                .themedForeground(themeManager.currentTheme.dangerColor)
 
             VStack(spacing: 12) {
                 Button {
@@ -40,7 +40,7 @@ struct DebugSection: View {
                 if proManager.isDebugProEnabled {
                     HStack {
                         Image(systemName: "info.circle")
-                            .foregroundStyle(themeManager.currentTheme.warningColor)
+                            .themedForeground(themeManager.currentTheme.warningColor)
                         Text("Debug Pro is active. All premium features unlocked for testing.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
