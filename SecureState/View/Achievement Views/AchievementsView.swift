@@ -110,7 +110,7 @@ struct AchievementsView: View {
             // UNlock all acheivements temporarily for preview
             for achievement in Achievement.allAchievements {
                 if !achievement.isUnlocked {
-                    manager.unlockAchievement(achievement.id)
+                    manager.unlockAchievement(achievement.achievementID)
                 }
             }
         } label: {
