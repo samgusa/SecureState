@@ -54,7 +54,6 @@ struct DebugSection: View {
     }
 }
 
-#endif
 
 #Preview("Free User") {
     // We wrap setup code in a closure that returns the view.
@@ -73,3 +72,4 @@ struct DebugSection: View {
     return view
 }
 
+#endif

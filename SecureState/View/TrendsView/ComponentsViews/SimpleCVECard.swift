@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct SimpleCVECard: View {
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var themeManager: ThemeManager
     let cve: SimpleCVE
     @State private var isExpanded: Bool = false
@@ -105,7 +106,7 @@ struct SimpleCVECard: View {
     }
 
     private var severityColor: Color {
-        cve.severity.color
+        cve.severity.displayColor(for: colorScheme)
     }
 }
 

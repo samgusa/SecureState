@@ -77,12 +77,12 @@ struct ComponentCard: View {
                 )
             }
             .padding()
-            .background(needsAttention ? themeManager.currentTheme.warningColor.opacity(0.05) : Color(.systemBackground))
+            .background(getBackgroundColor())
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(
-                        needsAttention ? themeManager.currentTheme.warningColor.opacity(0.3) : Color(.secondarySystemBackground),
+                        getBorderColor(),
                         lineWidth: 1
                     )
             }
@@ -121,6 +121,45 @@ struct ComponentCard: View {
                 iosVersionDetector: iosVersionDetector,
                 timeBasedDetector: timeBasedDetector
             )
+        }
+    }
+
+    private func getBackgroundColor() -> Color {
+        if needsAttention {
+            return themeManager.currentTheme.warningColor.opacity(0.05)
+        }
+
+        let percentage = component.percentage
+
+        if percentage >= 0.8 {
+            // Good score (80%+)
+            return Color(.systemBackground)
+        } else if percentage >= 0.5 {
+            // Medium score (50-79%)
+            return themeManager.currentTheme.warningColor.opacity(0.03)
+        } else {
+            // Low score (below 50%)
+            return themeManager.currentTheme.dangerColor.opacity(0.05)
+        }
+    }
+
+
+    private func getBorderColor() -> Color {
+        if needsAttention {
+            return themeManager.currentTheme.warningColor.opacity(0.03)
+        }
+
+        let percentage = component.percentage
+
+        if percentage >= 0.8 {
+            // Good score (80%+)
+            return Color(.secondarySystemBackground)
+        } else if percentage >= 0.5 {
+            // Medium score (50-79%)
+            return themeManager.currentTheme.warningColor.opacity(0.02)
+        } else {
+            // Low score (below 50%)
+            return themeManager.currentTheme.dangerColor.opacity(0.03)
         }
     }
 }

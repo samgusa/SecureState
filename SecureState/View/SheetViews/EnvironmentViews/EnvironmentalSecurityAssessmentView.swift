@@ -124,7 +124,9 @@ struct EnvironmentalSecurityAssessmentView: View {
                 .fontWeight(.semibold)
 
             // Score breakdown explanation
-            scoreBreakdownCard
+            if detector.networkType == .cellular ||  detector.networkTrustLevel == nil {
+                scoreBreakdownCard
+            }
 
             // Current network status
             HStack(spacing: 12) {

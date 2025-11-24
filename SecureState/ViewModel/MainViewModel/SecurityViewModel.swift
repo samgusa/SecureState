@@ -360,7 +360,7 @@ class SecurityViewModel: ObservableObject {
 
     func loadRealComponents() async {
         await MainActor.run {
-            loadPersistedStatus()
+            loadPersistedStates()
         }
 
         screenRecordingDetector.checkCurrentState()
@@ -400,7 +400,7 @@ class SecurityViewModel: ObservableObject {
         }
     }
 
-    func loadPersistedStatus() {
+    func loadPersistedStates() {
         guard let modelContext = modelContext else { return }
 
         // VPN
@@ -409,6 +409,14 @@ class SecurityViewModel: ObservableObject {
             context: modelContext
         ) {
             vpnDetector.isUserConfirmedVPN = state.userConfirmed
+
+            let id = ComponentIdentifier.vpnStatus.rawValue
+            let descriptor = FetchDescriptor<StoredComponent>(
+                predicate: #Predicate { $0.identifier == id }
+            )
+            if let stored = try? modelContext.fetch(descriptor).first {
+                vpnDetector.lastConfirmationDate = stored.lastUpdated
+            }
         }
 
         // iOS Version
@@ -445,6 +453,7 @@ class SecurityViewModel: ObservableObject {
                 deviceLockDetector.userConfirmedQuickAutoLock = metadata.quickAutoLock
                 deviceLockDetector.biometricAvailable = metadata.biometricAvailable ?? false
                 deviceLockDetector.biometricTestPassed = metadata.biometricTestPassed ?? false
+                deviceLockDetector.lastConfirmationDate = stored.lastUpdated
             }
         }
 

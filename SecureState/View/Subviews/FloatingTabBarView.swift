@@ -55,7 +55,7 @@ struct FloatingTabBarView: View {
                     y: -2
                 )
                 .overlay {
-                    RoundedRectangle(cornerRadius: 20)
+                    RoundedRectangle(cornerRadius: 12)
                         .strokeBorder(
                             Color.primary.opacity(colorScheme == .dark ? 0.2 : 0.1),
                             lineWidth: 1

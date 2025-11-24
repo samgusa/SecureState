@@ -40,6 +40,8 @@ struct EnhancedProUpgradeView: View {
                         purchaseButton(for: product)
                     }
 
+                    subscriptionDisclosure(for: selectedTier)
+
                     // restore button
                     restoreButton
 
@@ -55,6 +57,8 @@ struct EnhancedProUpgradeView: View {
 
                     // feature comparison
                     featureComparison
+
+                    legalLinks
                 }
                 .padding()
             }
@@ -249,6 +253,45 @@ struct EnhancedProUpgradeView: View {
         .themedBackground(0.1)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
+
+    private var legalLinks: some View {
+        VStack(spacing: 12) {
+            if let privacyURL = URL(string: "https://samgusa.github.io/SecureState-privacy-policy/") {
+                Link(destination: privacyURL) {
+                    Text("Privacy Policy")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+
+            if let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/") {
+                Link(destination: termsURL) {
+                    Text("Terms of Use")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.top, 8)
+    }
+
+    @ViewBuilder
+    private func subscriptionDisclosure(for tier: ProductTier) -> some View {
+        if let length = tier.subscriptionLength, let price = tier.priceText {
+            VStack(spacing: 4) {
+                Text("\(tier.displayName) is an auto-renewable subscription.")
+                Text("Billed \(price) for \(length) and renews automatically unless cancelled at least 24 hours before renewal.")
+                Text("Manage or cancel anytime in your Apple ID settings.")
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal)
+        }
+    }
+
+
 }
 
 #Preview {

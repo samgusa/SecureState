@@ -15,6 +15,7 @@ class DeviceLockSecurityDetector: ObservableObject {
     @Published var biometricType: LABiometryType = .none
     @Published var lastBiometricTest: Date? = nil
     @Published var biometricTestPassed: Bool = false
+    @Published var lastConfirmationDate: Date? = nil
 
     // User confirmation states
     @Published var userConfirmedSixDigitPasscode: Bool? = nil
@@ -23,7 +24,7 @@ class DeviceLockSecurityDetector: ObservableObject {
     @Published var detectionConfidence: ConfidenceLevel = .medium
     @Published var isTestingBiometric: Bool = false
 
-    private let maxScore: Int = 10
+    private let maxScore: Int = 15
     private let context = LAContext()
 
     init() {
@@ -79,6 +80,35 @@ class DeviceLockSecurityDetector: ObservableObject {
     }
 
     func getSecurityScore() -> Int {
+        let baseScore = calculateBaseScore()
+
+        if biometricTestPassed, let testDate = lastBiometricTest {
+            let daysSinceTest = Calendar.current.dateComponents([.day], from: testDate, to: Date()).day ?? 0
+            if daysSinceTest < 30 {
+                return min(baseScore + 2, maxScore)  // Recent biometric test = fresh data, no degradation
+            }
+        }
+        // Check if user has made any manual confirmations
+        let hasManualConfirmations = userConfirmedSixDigitPasscode != nil ||
+        userConfirmedStrongPasscode != nil ||
+        userConfirmedQuickAutoLock != nil
+
+        if hasManualConfirmations, let confirmDate = lastConfirmationDate {
+            let daysSince = Calendar.current.dateComponents([.day], from: confirmDate, to: Date()).day ?? 0
+
+            switch daysSince {
+            case 0..<90:
+                return min(baseScore + 2, maxScore)  // Fresh confirmation
+            case 90..<180:
+                return min(baseScore + 1, maxScore)  // Slightly older
+            default:
+                return baseScore  // No bonus
+            }
+        }
+        return baseScore
+    }
+
+    private func calculateBaseScore() -> Int {
         let hasBiometrics = biometricAvailable && biometricTestPassed
         let hasSixDigitPasscode = userConfirmedSixDigitPasscode == true
         let hasStrongPasscode = userConfirmedStrongPasscode == true
@@ -86,32 +116,39 @@ class DeviceLockSecurityDetector: ObservableObject {
 
         // scoring logic as specified
         if hasBiometrics && hasSixDigitPasscode && hasStrongPasscode && hasQuickAutoLock {
-            return 15 // perfect setup
+            return 13 // perfect setup
         } else if hasBiometrics && hasSixDigitPasscode && hasStrongPasscode {
-            return 12 // very good
+            return 11 // very good
         } else if hasBiometrics && (hasSixDigitPasscode || hasStrongPasscode) {
-            return 10 // good biometrics with decent passcode
+            return 9 // good biometrics with decent passcode
         } else if hasSixDigitPasscode && hasStrongPasscode && hasQuickAutoLock {
-            return 7 // strong passcode but no biometrics
-        } else if passcodeSet && (hasStrongPasscode || hasStrongPasscode) {
-            return 4 // Basic but decent setup
+            return 8 // Strong passcode but no biometrics
+        } else if passcodeSet && (hasSixDigitPasscode || hasStrongPasscode) {
+            return 6 // Basic but decent setup
         } else if passcodeSet {
-            return 2
+            return 3 // Basic passcode only
         } else {
-            return 0
+            return 0 // No security
         }
     }
 
     func confirmSixDigitPasscode(_ confirmed: Bool) {
         userConfirmedSixDigitPasscode = confirmed
+        updateConfirmationDate()
     }
 
     func confirmStrongPasscode(_ confirmed: Bool) {
         userConfirmedStrongPasscode = confirmed
+        updateConfirmationDate()
     }
 
     func confirmQuickAutoLock(_ confirmed: Bool) {
         userConfirmedQuickAutoLock = confirmed
+        updateConfirmationDate()
+    }
+
+    private func updateConfirmationDate() {
+        lastConfirmationDate = Date()
     }
 
     func needsUserConfirmation() -> Bool {
@@ -137,20 +174,4 @@ class DeviceLockSecurityDetector: ObservableObject {
         let testStatus = biometricTestPassed ? "✓ Tested" : ""
         return "\(biometricStatus), \(passcodeStatus) \(testStatus)".trimmingCharacters(in: .whitespaces)
     }
-
-    var scoreExplanation: String {
-        let score = getSecurityScore()
-        if score >= 9 {
-            return "Excellent device security (\(score)/\(maxScore))"
-        } else if score >= 7 {
-            return "Good security with biometrics (\(score)/\(maxScore))"
-        } else if score >= 6 {
-            return "Decent passcode security (\(score)/\(maxScore))"
-        } else if score >= 2 {
-            return "Basic security setup (\(score)/\(maxScore))"
-        } else {
-            return "Weak device security (\(score)/\(maxScore))"
-        }
-    }
-
 }

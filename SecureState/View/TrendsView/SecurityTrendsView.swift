@@ -32,35 +32,45 @@ struct SecurityTrendsView: View {
     }
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Pro Status Check
-            if !proManager.isPro {
-                proUpgradePrompt
-            } else {
-                // Header with timeStamp
-                headerSection
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Pro Status Check
+                    if !proManager.isPro {
+                        proUpgradePrompt
+                            .id("top")
+                    } else {
+                        // Header with timeStamp
+                        headerSection
+                            .id("top")
 
-                // Main metric cards
-                metricsCardsSection
+                        // Main metric cards
+                        metricsCardsSection
 
-                // Chart section
-                chartSection
+                        // Chart section
+                        chartSection
 
-                // Insight Card
-                insightSection
+                        // Insight Card
+                        insightSection
 
-                if !trendsManager.allScoredCVEs.isEmpty ||
-                    !trendsManager.criticalCVEs.isEmpty ||
-                    !trendsManager.highCVEs.isEmpty ||
-                    !trendsManager.mediumCVEs.isEmpty {
-                    recentVulnerabilitiesSection
+                        if !trendsManager.allScoredCVEs.isEmpty ||
+                            !trendsManager.criticalCVEs.isEmpty ||
+                            !trendsManager.highCVEs.isEmpty ||
+                            !trendsManager.mediumCVEs.isEmpty {
+                            recentVulnerabilitiesSection
+                        }
+
+                        // educational context
+                        educationalSection
+
+                        // Attribution
+                        attributionSection
+                    }
                 }
-
-                // educational context
-                educationalSection
-
-                // Attribution
-                attributionSection
+                .padding()
+            }
+            .onAppear {
+                proxy.scrollTo("top", anchor: .top)
             }
         }
         .onAppear {
@@ -71,10 +81,14 @@ struct SecurityTrendsView: View {
         }
         .task {
             if proManager.isPro {
-                // Force initial fetch if we have no data
-                if trendsManager.historicalData.isEmpty || trendsManager.latestVulnerabilities.isEmpty {
-                    await trendsManager.fetchLatestData()
+                print("🔍 DEBUG - latestVulnerabilities.isEmpty: \(trendsManager.latestVulnerabilities.isEmpty)")
+
+                // If CVE samples are missing, FORCE fetch regardless of rate limit
+                if trendsManager.latestVulnerabilities.isEmpty {
+                    print("📊 Fetching because CVE samples are empty (bypassing rate limit)")
+                    await trendsManager.fetchLatestData(skipRateLimit: true) // ← Add this parameter
                 } else if trendsManager.shouldFetchToday() {
+                    print("📊 Fetching because it's a new day")
                     await trendsManager.fetchLatestData()
                 } else {
                     print("✅ Using cached data from today")
@@ -90,6 +104,7 @@ struct SecurityTrendsView: View {
 
     struct CVEFilterChip: View {
         @EnvironmentObject var themeManager: ThemeManager
+        @Environment(\.colorScheme) var colorScheme
         let metric: SecurityTrendsView.TrendMetric
         let count: Int
         let isSelected: Bool
@@ -109,7 +124,7 @@ struct SecurityTrendsView: View {
             case .vulnerabilities: return themeManager.currentTheme.accent
             case .critical: return themeManager.currentTheme.dangerColor
             case .high: return themeManager.currentTheme.warningColor
-            case .medium: return .yellow.adjustedForText(colorScheme: .dark)
+            case .medium: return colorScheme == .light ? Color(red: 0.85, green: 0.65, blue: 0.0) : .yellow
             }
         }
 
@@ -124,6 +139,7 @@ struct SecurityTrendsView: View {
                     Text(metric.rawValue)
                         .font(.subheadline)
                         .fontWeight(.medium)
+
 
                     if count > 0 {
                         Text("\(count)")
@@ -480,26 +496,30 @@ struct SecurityTrendsView: View {
     }
 
     private var insightSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "lightbulb.fill")
-                    .foregroundStyle(.yellow)
-                Text("Insight")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-            }
+        Group {
+            if trendsManager.historicalData.count >= 2 {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "lightbulb.fill")
+                            .foregroundStyle(.yellow)
+                        Text("Security Insight")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                    }
 
-            Text(trendsManager.getTrendInsight())
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding()
-        .background(Color.yellow.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
+                    Text(trendsManager.getTrendInsight())
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding()
+                .background(Color.yellow.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
+                }
+            }
         }
     }
 

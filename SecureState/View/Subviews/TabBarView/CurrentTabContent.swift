@@ -86,11 +86,24 @@ struct CurrentTabContent: View {
         case .more:
             SettingsSectionView(badgeRefreshTrigger: $badgeRefreshTrigger) {
                 vpnDetector.resetUserConfirmation()
+                vpnDetector.isUserConfirmedVPN = nil
+                vpnDetector.lastConfirmationDate = nil
+
                 iosVersionDetector.resetUserConfirmation()
+                iosVersionDetector.isUserConfirmedLatest = nil
+                iosVersionDetector.lastConfirmationDate = nil
+
                 deviceLockDetector.userConfirmedSixDigitPasscode = nil
                 deviceLockDetector.userConfirmedStrongPasscode = nil
                 deviceLockDetector.userConfirmedQuickAutoLock = nil
+                deviceLockDetector.isTestingBiometric = false
+                deviceLockDetector.lastBiometricTest = nil
+                deviceLockDetector.biometricTestPassed = false
+                deviceLockDetector.lastConfirmationDate = nil
+
                 bluetoothSecurityDetector.userEnvironmentConfirmation = nil
+                bluetoothSecurityDetector.resetDeviceList()
+                
                 environmentalSecurityDetector.networkTrustLevel = nil
                 environmentalSecurityDetector.environmentType = nil
 
@@ -104,15 +117,7 @@ struct CurrentTabContent: View {
     // We wrap setup code in a closure that returns the view.
     let mockThemeManager = ThemeManager()
 
-    let container: ModelContainer = {
-        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(for: schema, configurations: [config])
-        return container
-    }()
-
     let view: some View = {
-        let achievementManager = AchievementsManager(modelContext: container.mainContext)
         let mockStoreManager = EnhancedStoreManager()
         let freeProManager = ProStatusManager(storeManager: mockStoreManager)
         freeProManager.isPro = false  // not pro
@@ -169,15 +174,7 @@ struct CurrentTabContent: View {
 #Preview("Pro User") {
     let mockThemeManager = ThemeManager()
 
-    let container: ModelContainer = {
-        let schema = Schema([StoredTrendData.self]) // Ensure StoredTrendData is in your schema
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(for: schema, configurations: [config])
-        return container
-    }()
-
     let view: some View = {
-        let achievementManager = AchievementsManager(modelContext: container.mainContext)
         let mockStoreManager = EnhancedStoreManager()
         let proManager = ProStatusManager(storeManager: mockStoreManager, debug: true)
 

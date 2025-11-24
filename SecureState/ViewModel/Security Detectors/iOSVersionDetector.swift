@@ -44,25 +44,28 @@ class iOSVersionDetector: ObservableObject {
         let (major, _, _) = versionComponents
         let expectedVersion = getExpectedMajorVersion()
 
+        // Normalize expected version to iOS version format (e.g., 2026 → 26)
+        let normalizedExpected = expectedVersion >= 100 ? expectedVersion % 100 : expectedVersion
+
         // iOS 18+ version gets higher base score
         var score: Int = 0
 
         // Calculate how far behind the expecteed version we are
-        let versionData = expectedVersion - major
+        let versionData = normalizedExpected - major
 
         switch versionData {
         case 0:
             // current year's version
-            score = 7
+            score = 12
         case 1:
             // One year behind
-            score = 5
+            score = 10
         case 2:
             // two years behind
-            score = 3
+            score = 6
         default:
             // three or more years behind
-            score = max(1, 4 - versionData)
+            score = max(1, 7 - versionData)
         }
         return score
     }
@@ -74,49 +77,42 @@ class iOSVersionDetector: ObservableObject {
         let month = calendar.component(.month, from: now)
 
         // iOS Version 18 was released in 2024
-        // Starting 2025, version matches year, iOS 26 for 2025
+        // starting 2025, version matches year: iOS 26 for 2025
         if year >= 2025 {
-            // before september, previous year's version is still current
-            if month < 9 {
-                return year // previous year's version
-            } else {
-                return year + 1 // current year's version
-            }
-        } else if year == 2024 {
-            if month < 9 {
-                return 17 // Before Sept 2024, iOS 17 was current
-            } else {
-                return 18 // Sept 2024+, iOS 18 is current
-            }
-        } else {
-            // Fallback for dates before 2024
-            return 17
+            return month >= 9 ? year + 1 : year
         }
+
+        if year == 2024 {
+            return month >= 9 ? 18 : 17
+        }
+        return 17
     }
 
     func getSecurityScore() -> Int {
         let autoScore = calculateAutoScore()
 
         // scale auto score in 15-point system
-        let baseline = min(10, max(5, autoScore + 5))
+        let versionScore = autoScore
+
+        var confirmationBonus = 0
 
         // if user has confirmed, use that info
-        if let userConfirmed = isUserConfirmedLatest, let confirmDate = lastConfirmationDate {
-            let daysSince = Calendar.current.dateComponents([.day], from: confirmDate, to: Date()).day ?? 0
+        if let userConfirmed = isUserConfirmedLatest, let confirmData = lastConfirmationDate {
+            let daysSince = Calendar.current.dateComponents([.day], from: confirmData, to: Date()).day ?? 0
+
             if userConfirmed {
                 // degrade score over time since last confirmation
                 switch daysSince {
-                case 0..<30: return maxScore
-                case 30..<60: return maxScore - 3
-                case 60..<90: return maxScore - 7
-                case 90..<180: return maxScore - 10
-                default: return baseline
+                case 0..<30: confirmationBonus = 3    // Fresh confirmation
+                case 30..<60: confirmationBonus = 2   // 1-2 months old
+                case 60..<90: confirmationBonus = 1   // 2-3 months old
+                default: confirmationBonus = 0        // Stale confirmation
                 }
             } else {
-                return max(baseline - 3, 1)
+                confirmationBonus = -2
             }
         }
-        return baseline
+        return max(0, min(versionScore + confirmationBonus, maxScore))
     }
 
     func getComponentState() -> ComponentState {

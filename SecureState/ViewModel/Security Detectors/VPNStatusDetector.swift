@@ -15,6 +15,7 @@ class VPNStatusDetector: ObservableObject {
     @Published var detectionConfidence: ConfidenceLevel = .low
     @Published var isUserConfirmedVPN: Bool? = nil
     @Published var lastChecked: Date = Date()
+    @Published var lastConfirmationDate: Date? = nil
 
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "VPNMonitor")
@@ -83,7 +84,21 @@ class VPNStatusDetector: ObservableObject {
     func getSecurityScore() -> Int {
         // User confirmation takes priority due to detection limitations
         if let userConfirmed = isUserConfirmedVPN {
-            return userConfirmed ? maxScore : 0
+            let baseScore = userConfirmed ? maxScore : 0
+
+            // Apply freshness degradation
+            if let confirmDate = lastConfirmationDate {
+                let daysSince = Calendar.current.dateComponents([.day], from: confirmDate, to: Date()).day ?? 0
+                switch daysSince {
+                case 0..<60:
+                    return baseScore        // Fresh (2 months)
+                case 60..<90:
+                    return max(baseScore - 3, 0)   // 3 months - reminder to check
+                default:
+                    return 3  // Very stale - revert to auto-detection
+                }
+            }
+            return baseScore
         }
 
         if isVPNDetected {
@@ -95,8 +110,9 @@ class VPNStatusDetector: ObservableObject {
 
     func getComponentState() -> ComponentState {
         let autoScore = isVPNDetected ? 3 : 0
-        if let userConfirmed = isUserConfirmedVPN {
-            let finalScore = userConfirmed ? maxScore : 0
+
+        if isUserConfirmedVPN != nil {
+            let finalScore = getSecurityScore()
             return .userConfirmed(autoScore: autoScore, userScore: finalScore)
         } else {
             return .needsUserInput(
@@ -109,14 +125,17 @@ class VPNStatusDetector: ObservableObject {
 
     func confirmVPNActive() {
         isUserConfirmedVPN = true
+        lastConfirmationDate = Date()
     }
 
     func confirmNoVPN() {
         isUserConfirmedVPN = false
+        lastConfirmationDate = Date()
     }
 
     func resetUserConfirmation() {
         isUserConfirmedVPN = nil
+        lastConfirmationDate = nil
     }
 
     func needsUserConfirmation() -> Bool {

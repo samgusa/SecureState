@@ -79,12 +79,12 @@ struct LargeEnvironmentalSecurityCard: View {
                 )
             }
             .padding(20)
-            .background(needsAttention ? themeManager.currentTheme.warningColor.opacity(0.05) : Color(.systemBackground))
+            .background(getBackgroundColor())
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(needsAttention ? .orange.opacity(0.3) : themeManager.currentTheme.primary.opacity(0.2), lineWidth: 1)
+                    .stroke(getBorderColor(), lineWidth: 1)
             }
             .buttonStyle(PlainButtonStyle())
             .onAppear {
@@ -119,6 +119,45 @@ struct LargeEnvironmentalSecurityCard: View {
                     )
                 }
             }
+        }
+    }
+
+    private func getBackgroundColor() -> Color {
+        if needsAttention {
+            return themeManager.currentTheme.warningColor.opacity(0.05)
+        }
+
+        let percentage = component.percentage
+
+        if percentage >= 0.8 {
+            // Good score (80%+)
+            return Color(.systemBackground)
+        } else if percentage >= 0.5 {
+            // Medium score (50-79%)
+            return themeManager.currentTheme.warningColor.opacity(0.03)
+        } else {
+            // Low score (below 50%)
+            return themeManager.currentTheme.dangerColor.opacity(0.05)
+        }
+    }
+
+
+    private func getBorderColor() -> Color {
+        if needsAttention {
+            return themeManager.currentTheme.warningColor.opacity(0.03)
+        }
+
+        let percentage = component.percentage
+
+        if percentage >= 0.8 {
+            // Good score (80%+)
+            return Color(.secondarySystemBackground)
+        } else if percentage >= 0.5 {
+            // Medium score (50-79%)
+            return themeManager.currentTheme.warningColor.opacity(0.02)
+        } else {
+            // Low score (below 50%)
+            return themeManager.currentTheme.dangerColor.opacity(0.03)
         }
     }
 }

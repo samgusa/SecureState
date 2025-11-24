@@ -36,6 +36,15 @@ struct SimpleCVE: Identifiable, Codable {
         var displayName: String {
             return rawValue.capitalized
         }
+
+        func displayColor(for colorScheme: ColorScheme) -> Color {
+            switch self {
+            case .medium:
+                return colorScheme == .light ? Color(red: 0.85, green: 0.65, blue: 0.0) : .yellow
+            default:
+                return self.color
+            }
+        }
     }
 
     var displayDate: String {
@@ -50,5 +59,6 @@ struct SimpleCVE: Identifiable, Codable {
         }
         return "Security Vulnerability"
     }
+
 }
 

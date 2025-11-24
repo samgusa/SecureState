@@ -34,9 +34,11 @@ struct AboutView: View {
                                     )
                                 )
                                 .frame(width: 100, height: 100)
-                            Image(systemName: "shield.checkered")
-                                .font(.system(size: 48))
+                            Image("Logo")
+                                .resizable()
+                                .frame(width: 100, height: 100)
                                 .foregroundStyle(.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                         .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
 
@@ -143,3 +145,4 @@ struct AboutView: View {
     AboutView()
         .environmentObject(mockThemeManager)
 }
+

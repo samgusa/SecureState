@@ -63,6 +63,28 @@ enum ProductTier: String, CaseIterable {
         }
     }
 
+    var subscriptionLength: String? {
+        switch self {
+        case .oneTimePro:
+            return nil // Not a subscription
+        case .monthlyTrendsPlus:
+            return "1 Month"
+        case .yearlyTrendsPlus:
+            return "1 Year"
+        }
+    }
+
+    var priceText: String? {
+        switch self {
+        case .oneTimePro:
+            return nil
+        case .monthlyTrendsPlus:
+            return "$1.99/month"
+        case .yearlyTrendsPlus:
+            return "$19.99/year"
+        }
+    }
+
     var icon: String {
         switch self {
         case .oneTimePro:
