@@ -1,3 +1,7 @@
+<p align="center">
+<img width="120" height="120" alt="SecureState" src="https://github.com/user-attachments/assets/8180c5c5-c9a8-43b6-96d0-adc76732d603" />
+</p>
+
 # SecureState
 
 SecureState is a privacy-first iOS app that provides real-time, contextual security awareness through a clear and approachable scoring system.
@@ -7,6 +11,12 @@ The app answers one core question:
 **“Is right now a safe moment for sensitive activities on my device?”**
 
 Instead of overwhelming users with technical jargon or static checklists, SecureState combines device configuration, environmental context, and user confirmation into a single, easy-to-understand security score with plain-language guidance.
+
+---
+
+## Screenshots 
+
+<img width="10399" height="2778" alt="SecureStateImage" src="https://github.com/user-attachments/assets/3c496d75-1930-436c-bbdc-3f488c8215cb" />
 
 ---
 
