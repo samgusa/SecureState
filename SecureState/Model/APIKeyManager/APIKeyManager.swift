@@ -12,7 +12,7 @@ class APIKeyManager {
 
     // MARK: Key Identifiers
     private enum KeyIdentifier: String {
-        case nvdAPIKey = "com.securestate.nvd.apikey"
+        case nvdAPIKey = "NVD_API_KEY_HERE"
     }
 
     // MARK: - Public Methods
