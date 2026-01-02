@@ -131,6 +131,14 @@ With additional time or a backend component:
 
 ---
 
+## Design Tradeoffs
+
+SecureState intentionally favors user awareness over aggressive automation.
+Some security signals cannot be reliably inferred on-device, so the app
+combines detection with user confirmation to avoid misleading results.
+
+---
+
 ## Disclaimer
 
 SecureState is an educational security awareness app.  
